@@ -1,29 +1,43 @@
 import React, { Component } from 'react';
 import './App.css';
-import API from './api/api.js';
+// import API from './api/api';
+import { connect, sendMsg } from './api/websocket';
+import Header from './components/Header';
+import CardTable from './components/CardTable';
 
 class App extends Component {
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
     this.state = {
-      pong: 'pending'
+      pong: 'pending',
+      cardTable: []
     };
+    connect();
   }
-  componentWillMount() {
-    API.getHelloWorld()
-      .then(response => {
-        console.log('HELP');
-        this.setState(() => {
-          return { pong: response.help };
-        });
-      })
-      .catch(function(error) {
-        console.log(error);
-      });
+
+  componentDidMount() {
+    connect(msg => {
+      console.log('New Message');
+      this.setState(prevState => ({
+        cardTable: [...this.state.cardTable, msg]
+      }));
+      console.log(this.state);
+    });
+  }
+
+  send() {
+    console.log('hello');
+    sendMsg('hello');
   }
 
   render() {
-    return <h1>Ping {this.state.pong}</h1>;
+    return (
+      <div className="App">
+        <Header />
+        <CardTable cardTable={this.state.cardTable} />
+        <button onClick={this.send}>Hit</button>
+      </div>
+    );
   }
 }
 

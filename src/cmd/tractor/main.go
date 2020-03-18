@@ -2,9 +2,28 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
+
+	"github.com/eycai/tractor/src/internal/websocket"
 )
+
+func serveWs(pool *websocket.Pool, w http.ResponseWriter, r *http.Request) {
+	fmt.Println("WebSocket Endpoint Hit")
+	conn, err := websocket.Upgrade(w, r)
+	if err != nil {
+		fmt.Fprintf(w, "%+v\n", err)
+	}
+
+	client := &websocket.Client{
+		Conn: conn,
+		Pool: pool,
+	}
+
+	pool.Register <- client
+	client.Read()
+}
 
 func sayHello(w http.ResponseWriter, r *http.Request) {
 	values := map[string]string{"help": "hi", "oh": "good"}
@@ -18,16 +37,22 @@ func sayHello(w http.ResponseWriter, r *http.Request) {
 	w.Write(jsonValue)
 }
 
-func initiateServer() {
+func setupRoutes() {
 	http.HandleFunc("/hello", sayHello)
+	pool := websocket.NewPool()
+	go pool.Start()
+
+	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+		serveWs(pool, w, r)
+	})
+
 	buildHandler := http.FileServer(http.Dir("./web"))
 	http.Handle("/", buildHandler)
-
 	staticHandler := http.StripPrefix("/static/", http.FileServer(http.Dir("./web/static")))
 	http.Handle("/static/", staticHandler)
 }
 
 func main() {
-	initiateServer()
+	setupRoutes()
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }

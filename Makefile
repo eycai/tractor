@@ -17,5 +17,7 @@ app:
 
 .PHONY: server
 server:
-	@go build src/cmd/tractor/main.go && \
+	@cd src && \
+	go mod vendor && \
+	go build cmd/tractor/main.go && \
 	./main 
