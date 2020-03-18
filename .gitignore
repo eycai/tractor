@@ -1,0 +1,6 @@
+.vscode
+client/build/*
+client/node_modules/*
+client/.eslintrc
+client/.prettierrc
+src/vendor/*
