@@ -5,7 +5,7 @@ we like to play games
 ## installation
 
 - set up your go [workspace](https://medium.com/golang-learn/go-project-layout-e5213cdcfaa2): the tractor project should be in something like
-  `$GOPATH/github.com/{user}/tractor`. I use the default `$GOPATH` but you can change this as desired.
+  `$GOPATH/github.com/eycai/tractor`. I use the default `$GOPATH` but you can change this as desired.
 - set up client:
 
 ```
