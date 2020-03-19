@@ -9,7 +9,8 @@
     "evergreen-ui": "^4.23.3",
     "react": "^16.13.0",
     "react-dom": "^16.13.0",
-    "react-scripts": "3.4.0"
+    "react-scripts": "3.4.0",
+    "socket.io-client": "^2.3.0"
   },
   "proxy": "http://localhost:8080",
   "scripts": {

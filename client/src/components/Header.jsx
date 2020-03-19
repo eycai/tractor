@@ -5,12 +5,11 @@ const Header = () => (
   <Pane
     height={60}
     display="flex"
-    background="tealTint"
+    background="#084B8A"
     alignItems="center"
     padding={24}
-    marginBottom={16}
   >
-    <Text>
+    <Text color="white">
       <h1>Tractor</h1>
     </Text>
   </Pane>

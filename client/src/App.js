@@ -1,42 +1,31 @@
 import React, { Component } from 'react';
 import './App.css';
-// import API from './api/api';
-import { connect, sendMsg } from './api/websocket';
 import Header from './components/Header';
-import CardTable from './components/CardTable';
+import { Pane } from 'evergreen-ui';
+import socketIOClient from 'socket.io-client';
 
 class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      pong: 'pending',
-      cardTable: []
+      response: false,
+      endpoint: 'http://localhost:8080/'
     };
-    connect();
   }
 
   componentDidMount() {
-    connect(msg => {
-      console.log('New Message');
-      this.setState(prevState => ({
-        cardTable: [...this.state.cardTable, msg]
-      }));
-      console.log(this.state);
-    });
-  }
-
-  send() {
-    console.log('hello');
-    sendMsg('hello');
+    const { endpoint } = this.state;
+    const socket = socketIOClient(endpoint);
+    socket.on('reply', data => this.setState({ response: data }));
   }
 
   render() {
+    const { response } = this.state;
     return (
-      <div className="App">
+      <Pane>
         <Header />
-        <CardTable cardTable={this.state.cardTable} />
-        <button onClick={this.send}>Hit</button>
-      </div>
+        {response ? <p>Test: {response}</p> : <p>Loading...</p>}
+      </Pane>
     );
   }
 }
