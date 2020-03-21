@@ -16,7 +16,9 @@ class App extends Component {
   componentDidMount() {
     const { endpoint } = this.state;
     const socket = socketIOClient(endpoint);
-    socket.on('reply', data => this.setState({ response: data }));
+    socket.on('connect', data =>
+      this.setState({ response: JSON.stringify(data) })
+    );
   }
 
   render() {
