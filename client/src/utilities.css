@@ -1,0 +1,39 @@
+body {
+  margin: 0;
+  font-family: "Raleway", sans-serif;
+}
+
+input:focus {
+  outline: none;
+}
+
+input {
+  font-family: "Raleway", sans-serif;
+  font-weight: 200;
+  font-size: 16px;
+  line-height: 18px;
+  letter-spacing: 0.05em;
+}
+
+.u-small-text {
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 16px;
+  letter-spacing: 0.05em;
+}
+
+.u-button {
+  display: flex;
+  background: #ff6161;
+  border-radius: 10px;
+  width: 100px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  font-size: 18px;
+  line-height: 21px;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  color: white;
+}

@@ -1,0 +1,33 @@
+.Landing-container {
+  display: flex;
+  justify-content: center;
+}
+
+.Landing-body {
+  margin-top: 35vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.Landing-title {
+  font-weight: 500;
+  font-size: 60px;
+  line-height: 70px;
+  text-align: center;
+  letter-spacing: 0.1em;
+  color: #ff6161;
+  margin-bottom: 5px;
+}
+
+.Landing-user-input {
+  height: 10px;
+  background: #f0f0f0;
+  border-radius: 15px;
+  border: none;
+  margin-top: 10px;
+  margin-bottom: 36px;
+  width: 300px;
+  padding: 15px;
+  text-align: center;
+}
