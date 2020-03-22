@@ -1,12 +1,5 @@
 package models
 
-type Room struct {
-	ID     int      `json:"id"`
-	Users  []string `json:"users"`
-	HostID string   `json:"hostId"`
-	Game   Game     `json:"Game"`
-}
-
 type Game struct {
 	Players     []Player          `json:"players"`
 	Kitty       []Card            `json:"kitty"`
@@ -18,12 +11,11 @@ type Game struct {
 }
 
 type Player struct {
-	ID       int
-	Name     string
-	TeamID   int
-	IsBanker bool
-	Level    int
-	Cards    []Card
+	ID     int
+	Team   Team
+	Level  int
+	Hand   []Card
+	Points int
 }
 
 type Card struct {
@@ -48,3 +40,10 @@ const (
 
 // card values
 type Value int
+
+type Team string
+
+const (
+	Bosses   Team = "BOSSES"
+	Peasants Team = "PEASANTS"
+)

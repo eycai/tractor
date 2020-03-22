@@ -4,14 +4,17 @@ import (
 	"log"
 	"net/http"
 	"sync"
+
+	"github.com/eycai/tractor/src/internal/models"
 )
 
 type Server struct {
-	WSServer     *WSServer
-	UserIDLength int
-	UserIDs      map[string]string // map of username to user ID
-	SocketIDs    map[string]string // map of user ID to socket ID
-	mu           sync.Mutex
+	WSServer *WSServer
+	IDLength int
+	UserIDs  map[string]string       // map of username to user ID
+	Users    map[string]*models.User // map of user ID to user
+	Rooms    map[string]*models.Room // map of room id to room
+	mu       sync.Mutex
 }
 
 func (s *Server) handle(route string, handler http.Handler) {
@@ -31,6 +34,12 @@ func (s *Server) handleFunc(route string, handlerFunc http.HandlerFunc) {
 func (s *Server) handleRoutes() {
 	s.handleFunc("/register", s.RegisterUser)
 	s.handleFunc("/connect", s.ConnectUser)
+	s.handleFunc("/room_list", s.GetRooms)
+	s.handleFunc("/join_room", s.JoinRoom)
+	s.handleFunc("/leave_room", s.LeaveRoom)
+	s.handleFunc("/create_room", s.CreateRoom)
+	s.handleFunc("/start_game", s.StartGame)
+	s.handleFunc("/whoami", s.GetUser)
 }
 
 func (s *Server) serveClient() {
@@ -43,8 +52,9 @@ func (s *Server) serveClient() {
 func (s *Server) Start() {
 	ws := NewWSServer()
 	s.WSServer = ws
-	s.UserIDLength = 8
-	s.SocketIDs = make(map[string]string)
+	s.IDLength = 8
+	s.Users = make(map[string]*models.User)
+	s.Rooms = make(map[string]*models.Room)
 	s.UserIDs = make(map[string]string)
 	go ws.Server.Serve()
 	defer ws.Server.Close()

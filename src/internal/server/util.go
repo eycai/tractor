@@ -8,9 +8,21 @@ import (
 )
 
 func (s *Server) generateUserID() string {
-	id := randomString(s.UserIDLength)
-	for mapContainsKey(s.SocketIDs, id) {
-		id = randomString(s.UserIDLength)
+	id := randomString(s.IDLength)
+	_, ok := s.Users[id]
+	for ok {
+		id = randomString(s.IDLength)
+		_, ok = s.Users[id]
+	}
+	return id
+}
+
+func (s *Server) generateRoomID() string {
+	id := randomString(s.IDLength)
+	_, ok := s.Rooms[id]
+	for ok {
+		id = randomString(s.IDLength)
+		_, ok = s.Rooms[id]
 	}
 	return id
 }
@@ -25,11 +37,6 @@ func randomString(length int) string {
 		b.WriteRune(chars[rand.Intn(len(chars))])
 	}
 	return b.String() // E.g. "ExcbsVQs"
-}
-
-func mapContainsKey(m map[string]string, key string) bool {
-	_, ok := m[key]
-	return ok
 }
 
 func getUserID(w http.ResponseWriter, r *http.Request) string {
