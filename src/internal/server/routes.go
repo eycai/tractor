@@ -111,6 +111,7 @@ func (s *Server) ConnectUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.Users[userID].SocketID = req.SocketID
+	log.Printf("updated the socket id to be %v", s.Users[userID].SocketID)
 	log.Printf("current users: %v", s.Users)
 }
 

@@ -1,0 +1,26 @@
+.LobbyList-container {
+  display: flex;
+  align-items: center;
+  padding-top: 60px;
+  flex-direction: column;
+}
+
+.LobbyList-body {
+  padding: 50px;
+}
+
+.LobbyList-entry {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  width: 60vw;
+  padding-top: 15px;
+  padding-bottom: 15px;
+  padding-left: 35px;
+  padding-right: 35px;
+  background: #f0f0f0;
+  border-radius: 10px;
+  margin-top: 25px;
+  margin-bottom: 25px;
+  cursor: pointer;
+}
