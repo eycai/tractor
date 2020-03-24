@@ -5,11 +5,12 @@ import (
 	"net/http"
 	"sync"
 
+	"github.com/eycai/tractor/src/internal/api"
 	"github.com/eycai/tractor/src/internal/models"
 )
 
 type Server struct {
-	WSServer *WSServer
+	WSServer *api.WSServer
 	IDLength int
 	UserIDs  map[string]string       // map of username to user ID
 	Users    map[string]*models.User // map of user ID to user
@@ -18,7 +19,7 @@ type Server struct {
 }
 
 func (s *Server) handle(route string, handler http.Handler) {
-	handler = CORSMiddleware(handler)
+	handler = api.CORSMiddleware(handler)
 	http.Handle(route, handler)
 }
 
@@ -40,6 +41,7 @@ func (s *Server) handleRoutes() {
 	s.handleFunc("/create_room", s.CreateRoom)
 	s.handleFunc("/start_game", s.StartGame)
 	s.handleFunc("/whoami", s.GetUser)
+	s.handleFunc("/room_info", s.RoomInfo)
 }
 
 func (s *Server) serveClient() {
@@ -50,7 +52,7 @@ func (s *Server) serveClient() {
 }
 
 func (s *Server) Start() {
-	ws := NewWSServer()
+	ws := api.NewWSServer()
 	s.WSServer = ws
 	s.IDLength = 8
 	s.Users = make(map[string]*models.User)

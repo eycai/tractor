@@ -1,26 +1,24 @@
 package models
 
 type Game struct {
-	Players     []Player          `json:"players"`
-	Kitty       []Card            `json:"kitty"`
-	TurnUserID  string            `json:"turnUserId"`
-	TrumpSuit   Suit              `json:"TrumpSuit"`
-	TrumpNumber int               `json:"TrumpNumber"`
-	BankerID    string            `json:"bankerID"`
+	Players     []*Player         `json:"players"`
+	Turn        string            `json:"turn"`
+	TrumpSuit   Suit              `json:"trumpSuit"`
+	TrumpNumber int               `json:"trumpNumber"`
+	Banker      string            `json:"banker"`
 	CardsInPlay map[string][]Card `json:"cardsInPlay"`
 }
 
 type Player struct {
-	ID     int
-	Team   Team
-	Level  int
-	Hand   []Card
-	Points int
+	Username string `json:"username"`
+	Team     Team   `json:"team"`
+	Level    int    `json:"level"`
+	Points   int    `json:"points"`
 }
 
 type Card struct {
-	Value int
-	Suit  Suit
+	Value int  `json:"value"`
+	Suit  Suit `json:"suit"`
 }
 
 type Deck struct {
