@@ -32,6 +32,7 @@ async function request(url, params, method = "GET") {
   try {
     result = await response.json();
   } catch (e) {
+    console.log("error");
     console.error(e);
   }
   return result;

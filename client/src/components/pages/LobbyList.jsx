@@ -4,9 +4,12 @@ import "./LobbyList.css";
 import { get } from "../../api/fetch";
 import { useEffect } from "react";
 
+import NewLobby from "../modules/NewLobby";
+
 let LobbyList = props => {
   let [lobbies, setLobbies] = useState({});
-  // let lobbiesUI = [];
+  let [newLobbyActive, setNewLobbyActive] = useState(false);
+
   useEffect(() => {
     get("/room_list").then(res => {
       console.log(res);
@@ -21,17 +24,16 @@ let LobbyList = props => {
     });
   }, []);
 
-  // useEffect(() => {
-  //   console.log("use effect lobbies");
-  //   console.log(lobbiesUI);
-  //   console.log(lobbiesUI);
-  // });
+  const enterLobby = lobby => {};
 
-  console.log(lobbies);
   let lobbiesUI = Object.keys(lobbies).map(l => {
     let lobby = lobbies[l];
     return (
-      <div className="LobbyList-entry" key={lobby.id}>
+      <div
+        className="LobbyList-entry"
+        key={lobby.id}
+        onClick={() => enterLobby(lobby.id)}
+      >
         <div>{lobby.id}</div>
         <div>{lobby.users.length}/9</div>
       </div>
@@ -40,8 +42,19 @@ let LobbyList = props => {
 
   return (
     <div className="LobbyList-container">
+      {newLobbyActive ? <NewLobby /> : null}
       <div className="u-large-text">Lobbies</div>
       <div className="LobbyList-body">{lobbiesUI}</div>
+      <div className="LobbyList-footer">
+        <div
+          className="u-button"
+          onClick={() => {
+            setNewLobbyActive(true);
+          }}
+        >
+          create new
+        </div>
+      </div>
     </div>
   );
 };

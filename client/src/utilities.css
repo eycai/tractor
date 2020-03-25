@@ -22,6 +22,18 @@ input {
   letter-spacing: 0.05em;
 }
 
+.u-normal-text {
+  font-family: Raleway;
+  font-style: normal;
+  font-weight: 500;
+  font-size: 24px;
+  line-height: 28px;
+  display: flex;
+  align-items: center;
+  text-align: center;
+  letter-spacing: 0.05em;
+}
+
 .u-large-text {
   font-family: Raleway;
   font-style: normal;
@@ -38,8 +50,8 @@ input {
   display: flex;
   background: #ff6161;
   border-radius: 10px;
-  width: 100px;
   height: 40px;
+  padding: 5px 40px 5px 40px;
   align-items: center;
   justify-content: center;
   font-weight: 500;

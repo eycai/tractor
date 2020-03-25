@@ -24,3 +24,17 @@
   margin-bottom: 25px;
   cursor: pointer;
 }
+
+.LobbyList-footer {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  padding-top: 40px;
+  padding-bottom: 40px;
+  height: 60px;
+  background-color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
