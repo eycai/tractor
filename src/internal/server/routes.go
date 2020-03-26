@@ -2,10 +2,8 @@ package server
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/eycai/tractor/src/internal/models"
 )
@@ -33,7 +31,7 @@ func (s *Server) JoinRoom(w http.ResponseWriter, r *http.Request) {
 
 	s.WSServer.AddToRoom(s.Users[userID].SocketID, req.RoomID)
 	s.addToRoom(userID, req.RoomID)
-	s.broadcastUpdate(req.RoomID, "update")
+	s.broadcastUpdate(req.RoomID, "player_joined")
 	returnSuccess(w)
 }
 
@@ -54,7 +52,7 @@ func (s *Server) LeaveRoom(w http.ResponseWriter, r *http.Request) {
 
 	s.WSServer.LeaveRoom(s.Users[userID].SocketID, req.RoomID)
 	s.removeFromRoom(userID, req.RoomID)
-	s.broadcastUpdate(req.RoomID, "update")
+	s.broadcastUpdate(req.RoomID, "player_left")
 	returnSuccess(w)
 }
 
@@ -159,7 +157,7 @@ func (s *Server) CreateRoom(w http.ResponseWriter, r *http.Request) {
 
 	roomID := s.createRoom(userID, req.Name, req.Capacity)
 	s.WSServer.AddToRoom(s.Users[userID].SocketID, roomID)
-	s.emitUpdateToUser(userID, "room_created")
+	s.broadcastUpdate(roomID, "room_created")
 
 	returnSuccess(w)
 }
@@ -203,84 +201,6 @@ func (s *Server) StartGame(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s.Rooms[roomID].Game = &game
-	s.broadcastUpdate(roomID, "update")
+	s.broadcastUpdate(roomID, "game_started")
 	w.WriteHeader(http.StatusOK)
-}
-
-func setCookie(w http.ResponseWriter, name string, value string) {
-	expiration := time.Now().Add(365 * 24 * time.Hour)
-	cookie := http.Cookie{Name: name, Value: value, Expires: expiration}
-	http.SetCookie(w, &cookie)
-}
-
-func removeCookie(w http.ResponseWriter, name string, value string) {
-	expiration := time.Now().Add(365 * 24 * time.Hour)
-	cookie := http.Cookie{Name: name, Value: value, Expires: expiration}
-	log.Printf("removed cookie")
-	http.SetCookie(w, &cookie)
-}
-
-func (s *Server) processPostRequest(w http.ResponseWriter, r *http.Request, req interface{}) (string, error) {
-	log.Printf("body: %v", r.Body)
-	log.Printf("query params: %v", r.URL.Query().Get("roomId"))
-	err := json.NewDecoder(r.Body).Decode(req)
-	if err != nil {
-		http.Error(w, "error decoding request", http.StatusBadRequest)
-		return "", err
-	}
-
-	userID := s.getUserID(w, r)
-	if userID == "" {
-		http.Error(w, "invalid user id", http.StatusBadRequest)
-		return "", fmt.Errorf("invalid user id %s", userID)
-	}
-
-	return userID, nil
-}
-
-func (s *Server) getUserID(w http.ResponseWriter, r *http.Request) string {
-	id, err := r.Cookie("user_id")
-	if err != nil {
-		return ""
-	}
-	if _, ok := s.Users[id.Value]; !ok {
-		removeCookie(w, "user_id", "")
-		return ""
-	}
-	return id.Value
-}
-
-func (s *Server) broadcastUpdate(roomID string, eventName string) {
-	for _, user := range s.Rooms[roomID].Users {
-		userID := s.UserIDs[user]
-		s.emitUpdateToUser(userID, eventName)
-	}
-}
-
-func (s *Server) emitUpdateToUser(userID string, eventName string) {
-	update := models.UpdateEvent{
-		User: s.Users[userID],
-	}
-
-	// update room if it exists
-	if s.Users[userID].RoomID != "" {
-		if room, ok := s.Rooms[s.Users[userID].RoomID]; ok {
-			update.Room = room
-		}
-	}
-
-	s.emitWSToUser(userID, eventName, update)
-}
-
-func (s *Server) emitWSToUser(userID string, eventName string, event interface{}) {
-	s.WSServer.Emit(s.Users[userID].SocketID, eventName, event)
-}
-
-func returnSuccess(w http.ResponseWriter) {
-	w.WriteHeader(http.StatusOK)
-	resp, err := json.Marshal(&models.EmptyResponse{})
-	if err != nil {
-		http.Error(w, "error writing response", http.StatusInternalServerError)
-	}
-	w.Write(resp)
 }

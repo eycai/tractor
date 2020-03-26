@@ -1,9 +1,6 @@
 package models
 
-import (
-	"math/rand"
-	"time"
-)
+import "log"
 
 type Game struct {
 	Players     []*Player         `json:"players"`
@@ -34,9 +31,8 @@ func (g *Game) getDeck() Deck {
 			}
 		}
 	}
-	rand.Seed(time.Now().UnixNano())
-	rand.Shuffle(len(deck), func(i, j int) { deck[i], deck[j] = deck[j], deck[i] })
-	return Deck{
-		Cards: deck,
-	}
+	d := Deck{Cards: deck}
+	d.shuffle()
+	log.Printf("deck: %v", d)
+	return d
 }

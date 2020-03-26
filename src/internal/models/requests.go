@@ -26,9 +26,14 @@ type LeaveRoomRequest struct {
 }
 
 type UpdateEvent struct {
-	Room *Room `json:"room"`
-	User *User `json:"user"`
+	Room  *Room  `json:"room"`
+	User  *User  `json:"user"`
+	Event *Event `json:"event"`
 }
 
 type EmptyResponse struct {
+}
+
+type Event struct {
+	Name string `json:"name"`
 }
