@@ -1,14 +1,5 @@
 package models
 
-type Game struct {
-	Players     []*Player         `json:"players"`
-	Turn        string            `json:"turn"`
-	TrumpSuit   Suit              `json:"trumpSuit"`
-	TrumpNumber int               `json:"trumpNumber"`
-	Banker      string            `json:"banker"`
-	CardsInPlay map[string][]Card `json:"cardsInPlay"`
-}
-
 type Player struct {
 	Username string `json:"username"`
 	Team     Team   `json:"team"`
@@ -36,8 +27,7 @@ const (
 	Joker   Suit = "JOKER"
 )
 
-// card values
-type Value int
+var Suits = []Suit{Spade, Diamond, Heart, Club, Joker}
 
 type Team string
 

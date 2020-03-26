@@ -15,7 +15,7 @@ func (s *Server) JoinRoom(w http.ResponseWriter, r *http.Request) {
 	defer s.mu.Unlock()
 
 	req := models.JoinRoomRequest{}
-	userID, err := s.processRequest(w, r, &req)
+	userID, err := s.processPostRequest(w, r, &req)
 	if err != nil {
 		return
 	}
@@ -42,7 +42,7 @@ func (s *Server) LeaveRoom(w http.ResponseWriter, r *http.Request) {
 	defer s.mu.Unlock()
 
 	req := models.LeaveRoomRequest{}
-	userID, err := s.processRequest(w, r, &req)
+	userID, err := s.processPostRequest(w, r, &req)
 	if err != nil {
 		return
 	}
@@ -80,13 +80,13 @@ func (s *Server) RoomInfo(w http.ResponseWriter, r *http.Request) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	req := models.RoomInfoRequest{}
-	_, err := s.processRequest(w, r, &req)
-	if err != nil {
+	roomID := r.URL.Query().Get("userId")
+	userID := s.getUserID(w, r)
+	if userID == "" {
 		return
 	}
 
-	room, err := json.Marshal(s.Rooms[req.RoomID])
+	room, err := json.Marshal(s.Rooms[roomID])
 	if err != nil {
 		http.Error(w, "error marshalling rooms", http.StatusInternalServerError)
 	}
@@ -138,7 +138,7 @@ func (s *Server) ConnectUser(w http.ResponseWriter, r *http.Request) {
 	defer s.mu.Unlock()
 
 	req := models.ConnectRequest{}
-	userID, err := s.processRequest(w, r, &req)
+	userID, err := s.processPostRequest(w, r, &req)
 	if err != nil {
 		return
 	}
@@ -152,7 +152,7 @@ func (s *Server) ConnectUser(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) CreateRoom(w http.ResponseWriter, r *http.Request) {
 	req := models.CreateRoomRequest{}
-	userID, err := s.processRequest(w, r, &req)
+	userID, err := s.processPostRequest(w, r, &req)
 	if err != nil {
 		return
 	}
@@ -220,7 +220,9 @@ func removeCookie(w http.ResponseWriter, name string, value string) {
 	http.SetCookie(w, &cookie)
 }
 
-func (s *Server) processRequest(w http.ResponseWriter, r *http.Request, req interface{}) (string, error) {
+func (s *Server) processPostRequest(w http.ResponseWriter, r *http.Request, req interface{}) (string, error) {
+	log.Printf("body: %v", r.Body)
+	log.Printf("query params: %v", r.URL.Query().Get("roomId"))
 	err := json.NewDecoder(r.Body).Decode(req)
 	if err != nil {
 		http.Error(w, "error decoding request", http.StatusBadRequest)

@@ -25,10 +25,6 @@ type LeaveRoomRequest struct {
 	RoomID string `json:"roomId"`
 }
 
-type RoomInfoRequest struct {
-	RoomID string `json:"roomId"`
-}
-
 type UpdateEvent struct {
 	Room *Room `json:"room"`
 	User *User `json:"user"`

@@ -33,15 +33,15 @@ func (s *Server) handleFunc(route string, handlerFunc http.HandlerFunc) {
 }
 
 func (s *Server) handleRoutes() {
-	s.handleFunc("/register", s.RegisterUser)
-	s.handleFunc("/connect", s.ConnectUser)
-	s.handleFunc("/room_list", s.GetRooms)
-	s.handleFunc("/join_room", s.JoinRoom)
-	s.handleFunc("/leave_room", s.LeaveRoom)
-	s.handleFunc("/create_room", s.CreateRoom)
-	s.handleFunc("/start_game", s.StartGame)
-	s.handleFunc("/whoami", s.GetUser)
-	s.handleFunc("/room_info", s.RoomInfo)
+	s.handleFunc("/api/register", s.RegisterUser)
+	s.handleFunc("/api/connect", s.ConnectUser)
+	s.handleFunc("/api/room_list", s.GetRooms)
+	s.handleFunc("/api/join_room", s.JoinRoom)
+	s.handleFunc("/api/leave_room", s.LeaveRoom)
+	s.handleFunc("/api/create_room", s.CreateRoom)
+	s.handleFunc("/api/start_game", s.StartGame)
+	s.handleFunc("/api/whoami", s.GetUser)
+	s.handleFunc("/api/room_info", s.RoomInfo)
 }
 
 func (s *Server) serveClient() {

@@ -1,18 +1,18 @@
-const _apiHost = "http://localhost:3000";
+const _apiHost = 'http://localhost:3000/api';
 
-async function request(url, params, method = "GET") {
+async function request(url, params, method = 'GET') {
   const options = {
     method,
     headers: {
-      "Content-Type": "application/json"
+      'Content-Type': 'application/json'
     }
   };
 
   // if params exists and method is GET, add query string to url
   // otherwise, just add params as a "body" property to the options object
   if (params) {
-    if (method === "GET") {
-      url += "?" + objectToQueryString(params);
+    if (method === 'GET') {
+      url += '?' + objectToQueryString(params);
     } else {
       options.body = JSON.stringify(params); // body should match Content-Type in headers option
     }
@@ -23,7 +23,7 @@ async function request(url, params, method = "GET") {
   // show an error if the status code is not 200
   if (response.status !== 200) {
     return generateErrorResponse(
-      "The server responded with an unexpected status."
+      'The server responded with an unexpected status.'
     );
   }
 
@@ -32,7 +32,7 @@ async function request(url, params, method = "GET") {
   try {
     result = await response.json();
   } catch (e) {
-    console.log("error");
+    console.log('error');
     console.error(e);
   }
   return result;
@@ -40,15 +40,15 @@ async function request(url, params, method = "GET") {
 
 function generateErrorResponse(message) {
   return {
-    status: "error",
+    status: 'error',
     message
   };
 }
 
 function objectToQueryString(obj) {
   return Object.keys(obj)
-    .map(key => key + "=" + obj[key])
-    .join("&");
+    .map(key => key + '=' + obj[key])
+    .join('&');
 }
 
 function get(url, params) {
@@ -56,7 +56,7 @@ function get(url, params) {
 }
 
 function post(url, params) {
-  return request(url, params, "POST");
+  return request(url, params, 'POST');
 }
 
 export { get, post };
