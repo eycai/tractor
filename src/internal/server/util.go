@@ -2,7 +2,6 @@ package server
 
 import (
 	"math/rand"
-	"net/http"
 	"strings"
 	"time"
 )
@@ -39,11 +38,15 @@ func randomString(length int) string {
 	return b.String() // E.g. "ExcbsVQs"
 }
 
-func getUserID(w http.ResponseWriter, r *http.Request) string {
-	id, err := r.Cookie("user_id")
-	if err != nil {
-		http.Error(w, "no user ID set in cookie", http.StatusBadRequest)
-		return ""
+func remove(slice []string, s int) []string {
+	return append(slice[:s], slice[s+1:]...)
+}
+
+func indexOf(slice []string, s string) int {
+	for i := range slice {
+		if slice[i] == s {
+			return i
+		}
 	}
-	return id.Value
+	return -1
 }

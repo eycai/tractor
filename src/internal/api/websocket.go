@@ -1,4 +1,4 @@
-package server
+package api
 
 import (
 	"log"
@@ -8,33 +8,39 @@ import (
 )
 
 type WSServer struct {
-	Server    *socketio.Server
-	Sockets   map[string]socketio.Conn // map of socket ID to connection
-	Broadcast *socketio.Broadcast
+	Server  *socketio.Server
+	Sockets map[string]socketio.Conn // map of socket ID to connection
+}
+
+func (ws *WSServer) AddToRoom(socketID string, roomID string) {
+	s := ws.Sockets[socketID]
+	s.Join(roomID)
+	s.SetContext("")
+	log.Printf("rooms: %v", ws.Server.Rooms("/"))
+	log.Printf("members: %v", ws.Server.RoomLen("/", roomID))
+}
+
+func (ws *WSServer) LeaveRoom(socketID string, roomID string) {
+	s := ws.Sockets[socketID]
+	s.Leave(roomID)
+}
+
+func (ws *WSServer) Emit(wsID string, eventName string, event interface{}) {
+	ws.Sockets[wsID].Emit(eventName, event)
+}
+
+func (ws *WSServer) BroadcastToRoom(roomID string, eventName string, event interface{}) {
+	ws.Server.BroadcastToRoom("", roomID, eventName, event)
 }
 
 func (ws *WSServer) connect(s socketio.Conn) error {
 	log.Printf("connected: %s", s.ID())
 	log.Printf("namespace: %s", s.Namespace())
-	s.Emit("connect", models.ConnectEvent{})
+	s.Emit("connect", models.ConnectEvent{
+		SocketID: s.ID(),
+	})
 	ws.Sockets[s.ID()] = s
 	return nil
-}
-
-func (ws *WSServer) addToRoom(socketID string, roomID string) {
-	s := ws.Sockets[socketID]
-	s.Join(roomID)
-	log.Printf("rooms: %v", ws.Server.Rooms("/"))
-	log.Printf("members: %v", ws.Server.RoomLen("/", roomID))
-}
-
-func (ws *WSServer) leaveRoom(socketID string, roomID string) {
-	s := ws.Sockets[socketID]
-	s.Leave(roomID)
-}
-
-func (ws *WSServer) emit(wsID string, eventName string, event interface{}) {
-	ws.Sockets[wsID].Emit(eventName, event)
 }
 
 func NewWSServer() *WSServer {

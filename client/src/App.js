@@ -3,7 +3,8 @@ import "./App.css";
 import socketIOClient from "socket.io-client";
 import Landing from "./components/pages/Landing";
 import Lobby from "./components/pages/Lobby";
-import LobbyList from "./components/pages/LobbyList";
+import Room from "./Room";
+import { Router, Link } from "@reach/router";
 import { get, post } from "./api/fetch";
 import { pages } from "./utilities.js";
 
@@ -11,8 +12,7 @@ class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      user: null,
-      page: pages.LANDING
+      user: null
     };
   }
 
@@ -36,20 +36,13 @@ class App extends Component {
     });
   }
 
-  setPage = page => {
-    this.setState({ page: page });
-  };
-
   render() {
-    const { response } = this.state;
-    switch (this.state.page) {
-      case pages.LANDING:
-        return <Landing setPage={this.setPage} user={this.state.user} />;
-      case pages.LOBBYLIST:
-        return <LobbyList />;
-      default:
-        return <div>Oops</div>;
-    }
+    return (
+      <Router>
+        <Landing path="/" user={this.state.user} />
+        <Room path="/:roomid" />
+      </Router>
+    );
   }
 }
 

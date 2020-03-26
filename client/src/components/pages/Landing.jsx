@@ -2,10 +2,10 @@ import React, { useState } from "react";
 import "./Landing.css";
 import "../../utilities.css";
 import { post, get } from "../../api/fetch";
-import { pages } from "../../utilities.js";
 
 let Landing = props => {
   let [username, setUsername] = useState("");
+  let [roomcode, setRoomcode] = useState(null);
   let [inputReadOnly, setInputReadOnly] = useState(false);
 
   let submitUsername = () => {
@@ -13,6 +13,16 @@ let Landing = props => {
       console.log(res);
       setInputReadOnly(true);
     });
+  };
+
+  let joinRoom = () => {
+    if (roomcode) {
+      post("/join_room", { RoomId: roomcode }).then(res => {
+        console.log(res);
+        // TODO @alex: make this not allow special chars, only letters
+        props.navigate(roomcode);
+      });
+    }
   };
 
   let usernameInput = props.user ? (
@@ -33,22 +43,37 @@ let Landing = props => {
     ></input>
   );
 
+  let roomCodeWidget = props.user ? (
+    <>
+      <div className="u-small-text">room code</div>
+      <input
+        spellCheck="false"
+        className="Landing-user-input"
+        onChange={e => {
+          setRoomcode(e.target.value);
+        }}
+      ></input>
+    </>
+  ) : null;
+
   return (
     <div className="Landing-container">
       <div className="Landing-body">
         <div className="Landing-title">tractor.io</div>
         <div className="u-small-text">enter username below</div>
         {usernameInput}
+        {roomCodeWidget}
         <div
-          className="u-button"
+          className="u-button Landing-start-button"
           onClick={() => {
             if (!props.user) {
               submitUsername();
+            } else {
+              joinRoom();
             }
-            props.setPage(pages.LOBBYLIST);
           }}
         >
-          play!
+          {props.user ? "connect to room" : "play!"}
         </div>
       </div>
     </div>
