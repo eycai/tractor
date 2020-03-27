@@ -8,17 +8,26 @@ let Landing = props => {
   let [roomcode, setRoomcode] = useState(null);
   let [inputReadOnly, setInputReadOnly] = useState(false);
 
+  let createRoom = () => {
+    post("/create_room", { name: "test name", capacity: 4 }).then(res => {
+      if (res.id) {
+        props.navigate(res.id);
+      } else {
+        console.log("error when creating room, here is response:");
+        console.log(res);
+      }
+    });
+  };
+
   let submitUsername = () => {
     post("/register", { Username: username }).then(res => {
-      console.log(res);
       setInputReadOnly(true);
     });
   };
 
   let joinRoom = () => {
     if (roomcode) {
-      post("/join_room", { RoomId: roomcode }).then(res => {
-        console.log(res);
+      post("/join_room", { roomId: roomcode }).then(res => {
         // TODO @alex: make this not allow special chars, only letters
         props.navigate(roomcode);
       });
@@ -75,6 +84,11 @@ let Landing = props => {
         >
           {props.user ? "connect to room" : "play!"}
         </div>
+        {props.user ? (
+          <div className="u-small-text Landing-create-new" onClick={createRoom}>
+            create new room...
+          </div>
+        ) : null}
       </div>
     </div>
   );

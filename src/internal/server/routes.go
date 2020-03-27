@@ -155,11 +155,13 @@ func (s *Server) CreateRoom(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	roomID := s.createRoom(userID, req.Name, req.Capacity)
-	s.WSServer.AddToRoom(s.Users[userID].SocketID, roomID)
-	s.broadcastUpdate(roomID, "room_created")
-
-	returnSuccess(w)
+	room := s.createRoom(userID, req.Name, req.Capacity)
+	s.WSServer.AddToRoom(s.Users[userID].SocketID, room.ID)
+	roomJSON, err := json.Marshal(&room)
+	if err != nil {
+		http.Error(w, "error marshalling room", http.StatusInternalServerError)
+	}
+	w.Write(roomJSON)
 }
 
 func (s *Server) GetUser(w http.ResponseWriter, r *http.Request) {
