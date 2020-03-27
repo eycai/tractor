@@ -157,7 +157,6 @@ func (s *Server) CreateRoom(w http.ResponseWriter, r *http.Request) {
 
 	room := s.createRoom(userID, req.Name, req.Capacity)
 	s.WSServer.AddToRoom(s.Users[userID].SocketID, room.ID)
-	s.broadcastUpdate(room.ID, "room_created")
 	roomJSON, err := json.Marshal(&room)
 	if err != nil {
 		http.Error(w, "error marshalling room", http.StatusInternalServerError)
