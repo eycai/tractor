@@ -1,6 +1,5 @@
 import React, { Component } from "react";
 import "./App.css";
-import socketIOClient from "socket.io-client";
 import Landing from "./components/pages/Landing";
 import Lobby from "./components/pages/Lobby";
 import Room from "./Room";
@@ -16,22 +15,15 @@ class App extends Component {
     };
   }
 
+  setUser = newUser => {
+    this.setState({ user: newUser });
+  };
+
   componentDidMount() {
-    const { endpoint } = this.state;
-    const socket = socketIOClient(endpoint);
     get("/whoami").then(res => {
       console.log(res);
       if (res.id) {
         this.setState({ user: res });
-      }
-    });
-    socket.on("connect", data => {
-      // this.setState({ response: JSON.stringify(data) })
-      console.log("connected with socket");
-      console.log(data);
-      console.log(socket.id);
-      if (this.state.user) {
-        post("/connect", { socketId: socket.id, userId: this.state.user.id });
       }
     });
   }
@@ -40,7 +32,7 @@ class App extends Component {
     return (
       <Router>
         <Landing path="/" user={this.state.user} />
-        <Room path="/:roomid" user={this.state.user} />
+        <Room path="/:roomid" user={this.state.user} setUser={this.setUser} />
       </Router>
     );
   }
