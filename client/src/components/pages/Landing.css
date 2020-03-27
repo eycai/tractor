@@ -35,3 +35,12 @@
 .Landing-start-button {
   margin-top: 15px;
 }
+
+.Landing-create-new {
+  margin-top: 15px;
+  cursor: pointer;
+}
+
+.Landing-create-new:hover {
+  color: #ff6161;
+}

@@ -4,7 +4,7 @@ import (
 	"github.com/eycai/tractor/src/internal/models"
 )
 
-func (s *Server) createRoom(userID string, name string, capacity int) string {
+func (s *Server) createRoom(userID string, name string, capacity int) *models.Room {
 	creator := s.Users[userID].Username
 	roomID := s.generateRoomID()
 
@@ -18,7 +18,7 @@ func (s *Server) createRoom(userID string, name string, capacity int) string {
 	}
 
 	s.addToRoom(userID, roomID)
-	return roomID
+	return s.Rooms[roomID]
 }
 
 func (s *Server) addToRoom(userID string, roomID string) {
