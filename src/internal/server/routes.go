@@ -18,13 +18,19 @@ func (s *Server) JoinRoom(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	room, ok := s.Rooms[req.RoomID]
+	if !ok {
+		http.Error(w, "no room with given id", http.StatusBadRequest)
+		return
+	}
+
 	// check capacity
-	if len(s.Rooms[req.RoomID].Users) >= s.Rooms[req.RoomID].Capacity {
+	if len(room.Users) >= room.Capacity {
 		http.Error(w, "room at capacity", http.StatusBadRequest)
 		return
 	}
 
-	if s.Rooms[req.RoomID].Game != nil {
+	if room.Game != nil {
 		http.Error(w, "game in progress", http.StatusBadRequest)
 		return
 	}
@@ -45,7 +51,13 @@ func (s *Server) LeaveRoom(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if s.Rooms[req.RoomID].Game != nil {
+	room, ok := s.Rooms[req.RoomID]
+	if !ok {
+		http.Error(w, "no room with given id", http.StatusBadRequest)
+		return
+	}
+
+	if room.Game != nil {
 		http.Error(w, "game in progress", http.StatusBadRequest)
 		return
 	}

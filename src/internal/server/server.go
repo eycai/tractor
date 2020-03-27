@@ -10,12 +10,13 @@ import (
 )
 
 type Server struct {
-	WSServer *api.WSServer
-	IDLength int
-	UserIDs  map[string]string       // map of username to user ID
-	Users    map[string]*models.User // map of user ID to user
-	Rooms    map[string]*models.Room // map of room id to room
-	mu       sync.Mutex
+	WSServer     *api.WSServer
+	UserIDLength int
+	RoomIDLength int
+	UserIDs      map[string]string       // map of username to user ID
+	Users        map[string]*models.User // map of user ID to user
+	Rooms        map[string]*models.Room // map of room id to room
+	mu           sync.Mutex
 }
 
 func (s *Server) handle(route string, handler http.Handler) {
@@ -54,7 +55,8 @@ func (s *Server) serveClient() {
 func (s *Server) Start() {
 	ws := api.NewWSServer()
 	s.WSServer = ws
-	s.IDLength = 8
+	s.UserIDLength = 8
+	s.RoomIDLength = 4
 	s.Users = make(map[string]*models.User)
 	s.Rooms = make(map[string]*models.Room)
 	s.UserIDs = make(map[string]string)

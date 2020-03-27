@@ -94,30 +94,31 @@ func (s *Server) getUserID(w http.ResponseWriter, r *http.Request) string {
 }
 
 func (s *Server) generateUserID() string {
-	id := randomString(s.IDLength)
+	chars := []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
+		"abcdefghijklmnopqrstuvwxyz" +
+		"0123456789")
+	id := randomString(s.UserIDLength, chars)
 	_, ok := s.Users[id]
 	for ok {
-		id = randomString(s.IDLength)
+		id = randomString(s.UserIDLength, chars)
 		_, ok = s.Users[id]
 	}
 	return id
 }
 
 func (s *Server) generateRoomID() string {
-	id := randomString(s.IDLength)
+	chars := []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+	id := randomString(s.RoomIDLength, chars)
 	_, ok := s.Rooms[id]
 	for ok {
-		id = randomString(s.IDLength)
+		id = randomString(s.RoomIDLength, chars)
 		_, ok = s.Rooms[id]
 	}
 	return id
 }
 
-func randomString(length int) string {
+func randomString(length int, chars []rune) string {
 	rand.Seed(time.Now().UnixNano())
-	chars := []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
-		"abcdefghijklmnopqrstuvwxyz" +
-		"0123456789")
 	var b strings.Builder
 	for i := 0; i < length; i++ {
 		b.WriteRune(chars[rand.Intn(len(chars))])
