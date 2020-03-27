@@ -90,7 +90,7 @@ func (s *Server) RoomInfo(w http.ResponseWriter, r *http.Request) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	roomID := r.URL.Query().Get("userId")
+	roomID := r.URL.Query().Get("roomId")
 	userID := s.getUserID(w, r)
 	if userID == "" {
 		return
