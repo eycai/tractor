@@ -184,7 +184,10 @@ func (s *Server) ConnectUser(w http.ResponseWriter, r *http.Request) {
 
 	// add socket map
 	s.Users[userID].SocketID = req.SocketID
-	s.SocketUsers[req.SocketID] = userID
+	// s.SocketUsers[req.SocketID] = userID
+	s.Heartbeats[userID] = &Heartbeat{
+		LastHeartbeat: time.Now(),
+	}
 	log.Printf("updated the socket id to be %v", s.Users[userID].SocketID)
 	log.Printf("current users: %v", s.Users)
 

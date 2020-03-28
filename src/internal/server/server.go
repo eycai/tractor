@@ -12,10 +12,10 @@ import (
 )
 
 type Server struct {
-	WSServer          *socketio.Server
-	Sockets           map[string]socketio.Conn // map of socket ID to connection
-	SocketUsers       map[string]string        // map of socket ID to user ID
-	Heartbeats        map[string]*Heartbeat    // map of user ID to last heartbeat
+	WSServer *socketio.Server
+	Sockets  map[string]socketio.Conn // map of socket ID to connection
+	// SocketUsers       map[string]string        // map of socket ID to user ID
+	Heartbeats        map[string]*Heartbeat // map of user ID to last heartbeat
 	UserIDLength      int
 	RoomIDLength      int
 	UserIDs           map[string]string       // map of username to user ID
@@ -100,58 +100,15 @@ func (s *Server) handleHeartbeat() {
 // 	c.Leave(roomID)
 // }
 
-func (s *Server) Emit(wsID string, eventName string, event interface{}) {
-	s.Sockets[wsID].Emit(eventName, event)
-}
-
-func (s *Server) connectWS(c socketio.Conn) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	log.Printf("connected: %s", c.ID())
-	log.Printf("namespace: %s", c.Namespace())
-	c.Emit("connect", models.ConnectEvent{
-		SocketID: c.ID(),
-	})
-	s.Sockets[c.ID()] = c
-	return nil
-}
-
-func (s *Server) disconnectWS(c socketio.Conn, reason string) {
-	// s.mu.Lock()
-	// defer s.mu.Unlock()
-	log.Printf("disconnected %s, reason %s", c.ID(), reason)
-	// userID, ok := s.SocketUsers[c.ID()]
-	// if !ok {
-	// 	return
-	// }
-	// delete(s.SocketUsers, c.ID())
-	// roomID := s.Users[userID].RoomID
-	// if s.Users[userID].SocketID != c.ID() {
-	// 	// stale tab
-	// 	return
-	// }
-	// s.removeFromRoom(userID, roomID)
-	// s.broadcastUpdate(roomID, "player_left")
-}
-
-func (s *Server) CreateWSServer() {
-	server, err := socketio.NewServer(nil)
-	s.Sockets = make(map[string]socketio.Conn)
-	s.SocketUsers = make(map[string]string)
-	s.WSServer = server
-
-	if err != nil {
-		log.Fatal(err)
+func (s *Server) SendHeartbeats() {
+	for {
+		s.mu.Lock()
+		for u := range s.Heartbeats {
+			s.emitWSToUser(u, "heartbeat", "")
+		}
+		s.mu.Unlock()
+		time.Sleep(time.Millisecond * 300)
 	}
-
-	server.OnConnect("/", s.connectWS)
-
-	server.OnError("/", func(s socketio.Conn, e error) {
-		log.Printf("error: %v", e)
-	})
-
-	server.OnEvent("/", "disconnect", s.disconnectWS)
-	server.OnDisconnect("/", s.disconnectWS)
 }
 
 func (s *Server) Start() {
@@ -171,6 +128,7 @@ func (s *Server) Start() {
 	s.handleRoutes()
 	s.serveClient()
 
+	go s.SendHeartbeats()
 	// start server
 	log.Println("Serving at localhost:8080...")
 	log.Fatal(http.ListenAndServe(":8080", nil))

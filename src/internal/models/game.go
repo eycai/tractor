@@ -14,7 +14,7 @@ type Game struct {
 func (g *Game) getDeck() Deck {
 	numDecks := len(g.Players)
 	deck := make([]Card, numDecks*54)
-	// suitValue := 0
+	suitValue := 0
 	for _, s := range Suits {
 		if s == Joker {
 			newCards := make([]Card, 2*numDecks)
@@ -23,6 +23,14 @@ func (g *Game) getDeck() Deck {
 				newCards[i+1] = Card{Value: 2, Suit: s, gameValue: 54, IsTrumpSuit: true}
 			}
 		} else {
+			suitBase := 0
+			if s == g.TrumpSuit {
+				suitBase = 3
+			} else {
+				suitBase = suitValue
+				suitValue++
+			}
+			log.Printf("%d", suitBase)
 			for i := 1; i <= 13; i++ {
 				newCards := make([]Card, numDecks)
 				// gameValue := k*13 + i
