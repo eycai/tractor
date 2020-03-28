@@ -26,8 +26,6 @@ func removeCookie(w http.ResponseWriter, name string, value string) {
 }
 
 func (s *Server) processPostRequest(w http.ResponseWriter, r *http.Request, req interface{}) (string, error) {
-	log.Printf("body: %v", r.Body)
-	log.Printf("query params: %v", r.URL.Query().Get("roomId"))
 	err := json.NewDecoder(r.Body).Decode(req)
 	if err != nil {
 		http.Error(w, "error decoding request", http.StatusBadRequest)
@@ -44,6 +42,10 @@ func (s *Server) processPostRequest(w http.ResponseWriter, r *http.Request, req 
 }
 
 func (s *Server) broadcastUpdate(roomID string, eventName string) {
+	if _, ok := s.Rooms[roomID]; !ok {
+		return
+	}
+
 	for _, user := range s.Rooms[roomID].Users {
 		userID := s.UserIDs[user]
 		s.emitUpdateToUser(userID, eventName)
@@ -69,7 +71,7 @@ func (s *Server) emitUpdateToUser(userID string, updateEventName string) {
 }
 
 func (s *Server) emitWSToUser(userID string, eventName string, event interface{}) {
-	s.WSServer.Emit(s.Users[userID].SocketID, eventName, event)
+	s.Emit(s.Users[userID].SocketID, eventName, event)
 }
 
 func returnSuccess(w http.ResponseWriter) {

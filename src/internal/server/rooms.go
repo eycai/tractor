@@ -1,6 +1,8 @@
 package server
 
 import (
+	"log"
+
 	"github.com/eycai/tractor/src/internal/models"
 )
 
@@ -17,6 +19,7 @@ func (s *Server) createRoom(userID string, name string, capacity int) *models.Ro
 		Capacity: capacity,
 	}
 
+	log.Printf("new room: %s", roomID)
 	s.addToRoom(userID, roomID)
 	return s.Rooms[roomID]
 }
@@ -29,6 +32,18 @@ func (s *Server) addToRoom(userID string, roomID string) {
 func (s *Server) removeFromRoom(userID string, roomID string) {
 	s.Users[userID].RoomID = ""
 	user := s.Users[userID].Username
-	i := indexOf(s.Rooms[roomID].Users, user)
-	s.Rooms[roomID].Users = remove(s.Rooms[roomID].Users, i)
+	room, ok := s.Rooms[roomID]
+	if !ok {
+		return
+	}
+	i := indexOf(room.Users, user)
+	room.Users = remove(room.Users, i)
+	if user == room.Host && len(room.Users) > 0 {
+		room.Host = room.Users[0]
+	}
+
+	if len(room.Users) == 0 {
+		delete(s.Rooms, roomID)
+	}
+	log.Printf("%v", room.Users)
 }

@@ -35,9 +35,12 @@ func (s *Server) JoinRoom(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.WSServer.AddToRoom(s.Users[userID].SocketID, req.RoomID)
-	s.addToRoom(userID, req.RoomID)
-	s.broadcastUpdate(req.RoomID, "player_joined")
+	// s.AddToWSRoom(s.Users[userID].SocketID, req.RoomID)
+	if !room.HasUser(s.Users[userID].Username) {
+		s.addToRoom(userID, req.RoomID)
+		s.broadcastUpdate(req.RoomID, "player_joined")
+	}
+
 	returnSuccess(w)
 }
 
@@ -57,12 +60,17 @@ func (s *Server) LeaveRoom(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if room.Game != nil {
-		http.Error(w, "game in progress", http.StatusBadRequest)
+	// check capacity
+	if len(room.Users) >= room.Capacity {
+		http.Error(w, "room at capacity", http.StatusBadRequest)
 		return
 	}
 
-	s.WSServer.LeaveRoom(s.Users[userID].SocketID, req.RoomID)
+	if !room.HasUser(s.Users[userID].Username) {
+		returnSuccess(w)
+		return
+	}
+
 	s.removeFromRoom(userID, req.RoomID)
 	s.broadcastUpdate(req.RoomID, "player_left")
 	returnSuccess(w)
@@ -153,8 +161,15 @@ func (s *Server) ConnectUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// if already has connection, remove it first
+	socket := s.Users[userID].SocketID
+	if socket != "" {
+		s.Emit(socket, "stale", models.EmptyResponse{})
+	}
+
 	// add socket map
 	s.Users[userID].SocketID = req.SocketID
+	s.SocketUsers[req.SocketID] = userID
 	log.Printf("updated the socket id to be %v", s.Users[userID].SocketID)
 	log.Printf("current users: %v", s.Users)
 	returnSuccess(w)
@@ -168,7 +183,7 @@ func (s *Server) CreateRoom(w http.ResponseWriter, r *http.Request) {
 	}
 
 	room := s.createRoom(userID, req.Name, req.Capacity)
-	s.WSServer.AddToRoom(s.Users[userID].SocketID, room.ID)
+	// s.AddToWSRoom(s.Users[userID].SocketID, room.ID)
 	roomJSON, err := json.Marshal(&room)
 	if err != nil {
 		http.Error(w, "error marshalling room", http.StatusInternalServerError)
