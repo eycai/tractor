@@ -14,7 +14,7 @@ let Landing = props => {
     post("/create_room", { name: "test name", capacity: 4 }).then(res => {
       if (res.status === 200) {
         if (res.payload) {
-          props.navigate(res.id);
+          props.navigate(res.payload.id);
         } else {
           console.log("ERROR, no payload in response");
         }
@@ -30,6 +30,14 @@ let Landing = props => {
     post("/register", { Username: username }).then(res => {
       if (res.status === 200) {
         setInputReadOnly(true);
+        post("/connect", {
+          socketId: socket.id
+        });
+        get("/whoami").then(whoamires => {
+          if (whoamires.status === 200) {
+            props.setUser(whoamires.payload);
+          }
+        });
       } else {
         console.error(
           `unexpected status code ${res.status} with message ${res.payload}`
@@ -56,44 +64,46 @@ let Landing = props => {
     }
   };
 
-  let usernameInput = props.user ? (
-    <input
-      spellCheck="false"
-      className="Landing-user-input"
-      readOnly={true}
-      value={props.user.username}
-    ></input>
-  ) : (
-    <input
-      spellCheck="false"
-      className="Landing-user-input"
-      readOnly={inputReadOnly}
-      onChange={e => {
-        setUsername(e.target.value);
-      }}
-    ></input>
-  );
-
-  let roomCodeWidget = props.user ? (
-    <>
-      <div className="u-small-text">room code</div>
+  let usernameInput =
+    props.user && props.user.id ? (
       <input
         spellCheck="false"
         className="Landing-user-input"
+        readOnly={true}
+        value={props.user.username}
+      ></input>
+    ) : (
+      <input
+        spellCheck="false"
+        className="Landing-user-input"
+        readOnly={inputReadOnly}
         onChange={e => {
-          setRoomcode(e.target.value);
+          setUsername(e.target.value);
         }}
       ></input>
-      <div
-        className="Landing-error u-small-text"
-        style={
-          errorMessage ? { visibility: "visible" } : { visibility: "hidden" }
-        }
-      >
-        {errorMessage}
-      </div>
-    </>
-  ) : null;
+    );
+
+  let roomCodeWidget =
+    props.user && props.user.id ? (
+      <>
+        <div className="u-small-text">room code</div>
+        <input
+          spellCheck="false"
+          className="Landing-user-input"
+          onChange={e => {
+            setRoomcode(e.target.value);
+          }}
+        ></input>
+        <div
+          className="Landing-error u-small-text"
+          style={
+            errorMessage ? { visibility: "visible" } : { visibility: "hidden" }
+          }
+        >
+          {errorMessage}
+        </div>
+      </>
+    ) : null;
 
   return (
     <div className="Landing-container">
@@ -105,16 +115,16 @@ let Landing = props => {
         <div
           className="u-button Landing-start-button"
           onClick={() => {
-            if (!props.user) {
+            if (props.user && !props.user.id) {
               submitUsername();
             } else {
               joinRoom();
             }
           }}
         >
-          {props.user ? "connect to room" : "play!"}
+          {props.user && props.user.id ? "connect to room" : "play!"}
         </div>
-        {props.user ? (
+        {props.user && props.user.id ? (
           <div className="u-small-text Landing-create-new" onClick={createRoom}>
             create new room...
           </div>

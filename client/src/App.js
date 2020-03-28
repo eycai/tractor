@@ -31,7 +31,7 @@ class App extends Component {
   render() {
     return (
       <Router>
-        <Landing path="/" user={this.state.user} />
+        <Landing path="/" user={this.state.user} setUser={this.setUser} />
         <Room path="/:roomid" user={this.state.user} setUser={this.setUser} />
       </Router>
     );
