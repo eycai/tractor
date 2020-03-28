@@ -12,8 +12,13 @@ let Room = props => {
 
   useEffect(() => {
     get("/room_info", { roomId: props.roomid }).then(res => {
-      console.log(res);
-      setRoomInfo(res);
+      if (res.status === 200) {
+        setRoomInfo(res.payload);
+      } else {
+        console.error(
+          `unexpected status code ${res.status} with message ${res.payload}`
+        );
+      }
     });
     socket.on("update", data => {
       console.log("got an update on this room.");

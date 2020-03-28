@@ -19,7 +19,7 @@ let Lobby = props => {
       <div className="Lobby-container">
         <div className="Lobby-body">
           <div className="u-title-text">
-            {props.user ? `${props.user.username}'s Lobby` : "Loading..."}
+            {props.roomInfo ? `${props.roomInfo.host}'s Lobby` : "Loading..."}
           </div>
           <div className="u-large-text Lobby-room-code">
             Room Code: {props.roomid}

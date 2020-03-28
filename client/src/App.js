@@ -6,6 +6,7 @@ import Room from "./Room";
 import { Router, Link } from "@reach/router";
 import { get, post } from "./api/fetch";
 import { pages } from "./utilities.js";
+import { socket } from "./client-socket";
 
 class App extends Component {
   constructor(props) {
@@ -21,9 +22,8 @@ class App extends Component {
 
   componentDidMount() {
     get("/whoami").then(res => {
-      console.log(res);
-      if (res.id) {
-        this.setState({ user: res });
+      if (res.status === 200) {
+        this.setState({ user: res.payload });
       }
     });
   }

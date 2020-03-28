@@ -2,34 +2,56 @@ import React, { useState } from "react";
 import "./Landing.css";
 import "../../utilities.css";
 import { post, get } from "../../api/fetch";
+import { socket } from "../../client-socket";
 
 let Landing = props => {
   let [username, setUsername] = useState("");
   let [roomcode, setRoomcode] = useState(null);
   let [inputReadOnly, setInputReadOnly] = useState(false);
+  let [errorMessage, setErrorMessage] = useState(null);
 
   let createRoom = () => {
     post("/create_room", { name: "test name", capacity: 4 }).then(res => {
-      if (res.id) {
-        props.navigate(res.id);
+      if (res.status === 200) {
+        if (res.payload) {
+          props.navigate(res.id);
+        } else {
+          console.log("ERROR, no payload in response");
+        }
       } else {
-        console.log("error when creating room, here is response:");
-        console.log(res);
+        console.error(
+          `unexpected status code ${res.status} with message ${res.payload}`
+        );
       }
     });
   };
 
   let submitUsername = () => {
     post("/register", { Username: username }).then(res => {
-      setInputReadOnly(true);
+      if (res.status === 200) {
+        setInputReadOnly(true);
+      } else {
+        console.error(
+          `unexpected status code ${res.status} with message ${res.payload}`
+        );
+      }
     });
   };
 
   let joinRoom = () => {
     if (roomcode) {
-      post("/join_room", { roomId: roomcode }).then(res => {
-        // TODO @alex: make this not allow special chars, only letters
-        props.navigate(roomcode);
+      post("/join_room", { roomId: roomcode.toUpperCase() }).then(res => {
+        if (res.status === 200) {
+          props.navigate(roomcode.toUpperCase());
+        } else if (res.status === 400) {
+          setErrorMessage(
+            "Invalid room code. Perhaps you meant to create a new room?"
+          );
+        } else {
+          console.error(
+            `unexpected status code ${res.status} with message ${res.payload}`
+          );
+        }
       });
     }
   };
@@ -62,6 +84,14 @@ let Landing = props => {
           setRoomcode(e.target.value);
         }}
       ></input>
+      <div
+        className="Landing-error u-small-text"
+        style={
+          errorMessage ? { visibility: "visible" } : { visibility: "hidden" }
+        }
+      >
+        {errorMessage}
+      </div>
     </>
   ) : null;
 

@@ -44,3 +44,8 @@
 .Landing-create-new:hover {
   color: #ff6161;
 }
+
+.Landing-error {
+  color: #ff6161;
+  min-height: 25px;
+}
