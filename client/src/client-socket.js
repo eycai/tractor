@@ -10,3 +10,7 @@ socket.on("connect", data => {
     socketId: socket.id
   });
 });
+
+socket.on("heartbeat", data => {
+  post("/heartbeat", {});
+});
