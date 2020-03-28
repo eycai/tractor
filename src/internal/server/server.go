@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/eycai/tractor/src/internal/api"
 	"github.com/eycai/tractor/src/internal/models"
@@ -11,15 +12,24 @@ import (
 )
 
 type Server struct {
-	WSServer     *socketio.Server
-	Sockets      map[string]socketio.Conn // map of socket ID to connection
-	SocketUsers  map[string]string        // map of socket ID to user ID
-	UserIDLength int
-	RoomIDLength int
-	UserIDs      map[string]string       // map of username to user ID
-	Users        map[string]*models.User // map of user ID to user
-	Rooms        map[string]*models.Room // map of room id to room
-	mu           sync.Mutex
+	WSServer          *socketio.Server
+	Sockets           map[string]socketio.Conn // map of socket ID to connection
+	SocketUsers       map[string]string        // map of socket ID to user ID
+	Heartbeats        map[string]*Heartbeat    // map of user ID to last heartbeat
+	UserIDLength      int
+	RoomIDLength      int
+	UserIDs           map[string]string       // map of username to user ID
+	Users             map[string]*models.User // map of user ID to user
+	Rooms             map[string]*models.Room // map of room id to room
+	heartbeatTimeout  time.Duration
+	disconnectTimeout time.Duration
+	mu                sync.Mutex
+}
+
+type Heartbeat struct {
+	LastHeartbeat  time.Time
+	Disconnected   bool
+	PreviousRoomID string
 }
 
 func (s *Server) handle(route string, handler http.Handler) {
@@ -45,6 +55,7 @@ func (s *Server) handleRoutes() {
 	s.handleFunc("/api/start_game", s.StartGame)
 	s.handleFunc("/api/whoami", s.GetUser)
 	s.handleFunc("/api/room_info", s.RoomInfo)
+	s.handleFunc("/api/heartbeat", s.Heartbeat)
 }
 
 func (s *Server) serveClient() {
@@ -52,6 +63,28 @@ func (s *Server) serveClient() {
 	http.Handle("/", buildHandler)
 	staticHandler := http.StripPrefix("/static/", http.FileServer(http.Dir("./web/static")))
 	http.Handle("/static/", staticHandler)
+}
+
+func (s *Server) handleHeartbeat() {
+	for u, h := range s.Heartbeats {
+		if h.Disconnected && time.Since(h.LastHeartbeat) > s.disconnectTimeout {
+			s.Users[u].Reset()
+			delete(s.Heartbeats, u)
+		} else if !h.Disconnected && time.Since(h.LastHeartbeat) > s.heartbeatTimeout {
+			h.Disconnected = true
+			s.Sockets[s.Users[u].SocketID].Close()
+			delete(s.Sockets, s.Users[u].SocketID)
+
+			roomID := s.Users[u].RoomID
+			if roomID == "" {
+				continue
+			}
+
+			s.removeFromRoom(u, roomID)
+			s.broadcastUpdate(roomID, "player_left")
+			h.PreviousRoomID = roomID
+		}
+	}
 }
 
 // func (s *Server) AddToWSRoom(socketID string, roomID string) {
@@ -84,21 +117,21 @@ func (s *Server) connectWS(c socketio.Conn) error {
 }
 
 func (s *Server) disconnectWS(c socketio.Conn, reason string) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	// s.mu.Lock()
+	// defer s.mu.Unlock()
 	log.Printf("disconnected %s, reason %s", c.ID(), reason)
-	userID, ok := s.SocketUsers[c.ID()]
-	if !ok {
-		return
-	}
-	delete(s.SocketUsers, c.ID())
-	roomID := s.Users[userID].RoomID
-	if s.Users[userID].SocketID != c.ID() {
-		// stale tab
-		return
-	}
-	s.removeFromRoom(userID, roomID)
-	s.broadcastUpdate(roomID, "player_left")
+	// userID, ok := s.SocketUsers[c.ID()]
+	// if !ok {
+	// 	return
+	// }
+	// delete(s.SocketUsers, c.ID())
+	// roomID := s.Users[userID].RoomID
+	// if s.Users[userID].SocketID != c.ID() {
+	// 	// stale tab
+	// 	return
+	// }
+	// s.removeFromRoom(userID, roomID)
+	// s.broadcastUpdate(roomID, "player_left")
 }
 
 func (s *Server) CreateWSServer() {
@@ -128,6 +161,8 @@ func (s *Server) Start() {
 	s.Users = make(map[string]*models.User)
 	s.Rooms = make(map[string]*models.Room)
 	s.UserIDs = make(map[string]string)
+	s.heartbeatTimeout = time.Second
+	s.disconnectTimeout = time.Minute
 	go s.WSServer.Serve()
 	defer s.WSServer.Close()
 

@@ -37,6 +37,9 @@ func (s *Server) removeFromRoom(userID string, roomID string) {
 		return
 	}
 	i := indexOf(room.Users, user)
+	if i == -1 {
+		return
+	}
 	room.Users = remove(room.Users, i)
 	if user == room.Host && len(room.Users) > 0 {
 		room.Host = room.Users[0]

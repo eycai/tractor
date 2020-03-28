@@ -4,9 +4,24 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/eycai/tractor/src/internal/models"
 )
+
+func (s *Server) Heartbeat(w http.ResponseWriter, r *http.Request) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	userID := s.getUserID(w, r)
+	if userID == "" {
+		return
+	}
+
+	log.Printf("heartbeat")
+
+	s.Heartbeats[userID].LastHeartbeat = time.Now()
+	s.Heartbeats[userID].Disconnected = false
+}
 
 func (s *Server) JoinRoom(w http.ResponseWriter, r *http.Request) {
 	s.mu.Lock()
@@ -172,6 +187,25 @@ func (s *Server) ConnectUser(w http.ResponseWriter, r *http.Request) {
 	s.SocketUsers[req.SocketID] = userID
 	log.Printf("updated the socket id to be %v", s.Users[userID].SocketID)
 	log.Printf("current users: %v", s.Users)
+
+	if h, okH := s.Heartbeats[userID]; okH {
+		if room, okR := s.Rooms[h.PreviousRoomID]; okR {
+			if len(room.Users) >= room.Capacity {
+				return
+			}
+
+			if room.Game != nil {
+				http.Error(w, "game in progress", http.StatusBadRequest)
+				return
+			}
+
+			// s.AddToWSRoom(s.Users[userID].SocketID, req.RoomID)
+			if !room.HasUser(s.Users[userID].Username) {
+				s.addToRoom(userID, h.PreviousRoomID)
+				s.broadcastUpdate(h.PreviousRoomID, "player_joined")
+			}
+		}
+	}
 	returnSuccess(w)
 }
 

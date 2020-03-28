@@ -8,3 +8,10 @@ type User struct {
 	Hand     []Card `json:"hand"`
 	Kitty    []Card `json:"kitty"`
 }
+
+func (u *User) Reset() {
+	u.SocketID = ""
+	u.RoomID = ""
+	u.Hand = []Card{}
+	u.Kitty = []Card{}
+}
