@@ -5,3 +5,4 @@ client/.eslintrc
 client/.prettierrc
 src/vendor/*
 src/main
+.DS_STORE
