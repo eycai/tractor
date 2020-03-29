@@ -2,6 +2,7 @@ import React from "react";
 import "./Lobby.css";
 import Header from "../modules/Header";
 import Exit from "../modules/Exit";
+import { post } from "../../api/fetch";
 
 //Props: user, roomid, roomInfo
 
@@ -15,7 +16,7 @@ const Lobby = props => {
     : null;
 
   const startGame = () => {
-    console.log("starting game");
+    post("/start_game", {});
   };
 
   const changeSettings = () => {
