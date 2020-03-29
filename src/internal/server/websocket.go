@@ -8,7 +8,10 @@ import (
 )
 
 func (s *Server) Emit(wsID string, eventName string, event interface{}) {
-	s.Sockets[wsID].Emit(eventName, event)
+	if ws, ok := s.Sockets[wsID]; ok {
+		ws.Emit(eventName, event)
+	}
+
 }
 
 func (s *Server) connectWS(c socketio.Conn) error {

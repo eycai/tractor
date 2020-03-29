@@ -47,6 +47,7 @@ func (s *Server) removeFromRoom(userID string, roomID string) {
 
 	if len(room.Users) == 0 {
 		delete(s.Rooms, roomID)
+		log.Printf("removing room %s", roomID)
 	}
 	log.Printf("%v", room.Users)
 }

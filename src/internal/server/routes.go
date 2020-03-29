@@ -17,8 +17,6 @@ func (s *Server) Heartbeat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("heartbeat")
-
 	s.Heartbeats[userID].LastHeartbeat = time.Now()
 	s.Heartbeats[userID].Disconnected = false
 }
@@ -119,12 +117,17 @@ func (s *Server) RoomInfo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	room, err := json.Marshal(s.Rooms[roomID])
+	_, ok := s.Rooms[roomID]
+	if !ok {
+		http.Error(w, "room does not exist", http.StatusBadRequest)
+	}
+
+	roomJSON, err := json.Marshal(s.Rooms[roomID])
 	if err != nil {
 		http.Error(w, "error marshalling rooms", http.StatusInternalServerError)
 	}
 
-	w.Write(room)
+	w.Write(roomJSON)
 }
 
 func (s *Server) RegisterUser(w http.ResponseWriter, r *http.Request) {
@@ -179,15 +182,12 @@ func (s *Server) ConnectUser(w http.ResponseWriter, r *http.Request) {
 	// if already has connection, remove it first
 	socket := s.Users[userID].SocketID
 	if socket != "" {
-		s.Emit(socket, "stale", models.EmptyResponse{})
+		go s.Emit(socket, "stale", models.EmptyResponse{})
 	}
 
 	// add socket map
 	s.Users[userID].SocketID = req.SocketID
 	// s.SocketUsers[req.SocketID] = userID
-	s.Heartbeats[userID] = &Heartbeat{
-		LastHeartbeat: time.Now(),
-	}
 	log.Printf("updated the socket id to be %v", s.Users[userID].SocketID)
 	log.Printf("current users: %v", s.Users)
 
@@ -209,6 +209,11 @@ func (s *Server) ConnectUser(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
+
+	s.Heartbeats[userID] = &Heartbeat{
+		LastHeartbeat: time.Now(),
+	}
+
 	returnSuccess(w)
 }
 

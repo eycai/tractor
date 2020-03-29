@@ -66,24 +66,32 @@ func (s *Server) serveClient() {
 }
 
 func (s *Server) handleHeartbeat() {
-	for u, h := range s.Heartbeats {
-		if h.Disconnected && time.Since(h.LastHeartbeat) > s.disconnectTimeout {
-			s.Users[u].Reset()
-			delete(s.Heartbeats, u)
-		} else if !h.Disconnected && time.Since(h.LastHeartbeat) > s.heartbeatTimeout {
-			h.Disconnected = true
-			s.Sockets[s.Users[u].SocketID].Close()
-			delete(s.Sockets, s.Users[u].SocketID)
+	for {
+		s.mu.Lock()
+		for u, h := range s.Heartbeats {
+			if h.Disconnected && time.Since(h.LastHeartbeat) > s.disconnectTimeout {
+				log.Printf("heartbeat disconnect")
+				s.Users[u].Reset()
+				delete(s.Heartbeats, u)
+			} else if !h.Disconnected && time.Since(h.LastHeartbeat) > s.heartbeatTimeout {
+				log.Printf("heartbeat timeout")
+				h.Disconnected = true
+				s.Sockets[s.Users[u].SocketID].Close()
+				s.Users[u].SocketID = ""
+				delete(s.Sockets, s.Users[u].SocketID)
 
-			roomID := s.Users[u].RoomID
-			if roomID == "" {
-				continue
+				roomID := s.Users[u].RoomID
+				if roomID == "" {
+					continue
+				}
+
+				s.removeFromRoom(u, roomID)
+				s.broadcastUpdate(roomID, "player_left")
+				h.PreviousRoomID = roomID
 			}
-
-			s.removeFromRoom(u, roomID)
-			s.broadcastUpdate(roomID, "player_left")
-			h.PreviousRoomID = roomID
 		}
+		s.mu.Unlock()
+		time.Sleep(time.Millisecond * 300)
 	}
 }
 
@@ -103,11 +111,14 @@ func (s *Server) handleHeartbeat() {
 func (s *Server) SendHeartbeats() {
 	for {
 		s.mu.Lock()
-		for u := range s.Heartbeats {
-			s.emitWSToUser(u, "heartbeat", "")
+		for u, h := range s.Heartbeats {
+			if !h.Disconnected {
+				go s.emitWSToUser(u, "heartbeat", "")
+			}
 		}
 		s.mu.Unlock()
-		time.Sleep(time.Millisecond * 300)
+		time.Sleep(time.Millisecond * 500)
+
 	}
 }
 
@@ -118,7 +129,8 @@ func (s *Server) Start() {
 	s.Users = make(map[string]*models.User)
 	s.Rooms = make(map[string]*models.Room)
 	s.UserIDs = make(map[string]string)
-	s.heartbeatTimeout = time.Second
+	s.Heartbeats = make(map[string]*Heartbeat)
+	s.heartbeatTimeout = time.Second * 2
 	s.disconnectTimeout = time.Minute
 	go s.WSServer.Serve()
 	defer s.WSServer.Close()
@@ -129,6 +141,7 @@ func (s *Server) Start() {
 	s.serveClient()
 
 	go s.SendHeartbeats()
+	go s.handleHeartbeat()
 	// start server
 	log.Println("Serving at localhost:8080...")
 	log.Fatal(http.ListenAndServe(":8080", nil))
