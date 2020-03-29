@@ -1,7 +1,5 @@
 package models
 
-import "log"
-
 type Game struct {
 	Players     []*Player         `json:"players"`
 	Turn        string            `json:"turn"`
@@ -11,36 +9,45 @@ type Game struct {
 	CardsInPlay map[string][]Card `json:"cardsInPlay"`
 }
 
-func (g *Game) getDeck() Deck {
-	numDecks := len(g.Players)
-	deck := make([]Card, numDecks*54)
-	suitValue := 0
+func (g *Game) GetDeck() Deck {
+	numDecks := len(g.Players) / 2
+	deck := []Card{}
+	suitNum := 0
 	for _, s := range Suits {
 		if s == Joker {
 			newCards := make([]Card, 2*numDecks)
 			for i := 0; i < numDecks; i++ {
-				newCards[i] = Card{Value: 1, Suit: s, gameValue: 53, IsTrumpSuit: true}
-				newCards[i+1] = Card{Value: 2, Suit: s, gameValue: 54, IsTrumpSuit: true}
+				newCards[2*i] = Card{Value: 1, Suit: s, GameValue: 50, IsTrumpSuit: true}
+				newCards[2*i+1] = Card{Value: 2, Suit: s, GameValue: 51, IsTrumpSuit: true}
 			}
+			deck = append(deck, newCards...)
 		} else {
-			suitBase := 0
+			currentValue := suitNum * 12
 			if s == g.TrumpSuit {
-				suitBase = 3
+				currentValue = 3 * 12
 			} else {
-				suitBase = suitValue
-				suitValue++
+				suitNum++
 			}
-			log.Printf("%d", suitBase)
 			for i := 1; i <= 13; i++ {
 				newCards := make([]Card, numDecks)
-				// gameValue := k*13 + i
-				// if i == g.TrumpNumber && s == g.TrumpSuit {
-				// 	gameValue = 52
-				// } else if i == g.TrumpNumber {
-				// 	gameValue = 51
-				// }
+				gameValue := currentValue
+				if i == g.TrumpNumber && s == g.TrumpSuit {
+					gameValue = 49
+				} else if i == g.TrumpNumber {
+					gameValue = 48
+				} else if i == 1 {
+					gameValue = currentValue + 11
+				} else {
+					currentValue++
+				}
 				for j := range newCards {
-					newCards[j] = Card{Value: i, Suit: s}
+					newCards[j] = Card{Value: i, Suit: s, GameValue: gameValue}
+					if s == g.TrumpSuit {
+						newCards[j].IsTrumpSuit = true
+					}
+					if i == g.TrumpNumber {
+						newCards[j].IsTrumpNumber = true
+					}
 				}
 				deck = append(deck, newCards...)
 			}
@@ -48,6 +55,5 @@ func (g *Game) getDeck() Deck {
 	}
 	d := Deck{Cards: deck}
 	d.shuffle()
-	log.Printf("deck: %v", d)
 	return d
 }

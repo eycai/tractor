@@ -12,8 +12,7 @@ type Card struct {
 	Suit          Suit `json:"suit"`
 	IsTrumpSuit   bool `json:"isTrumpSuit"`
 	IsTrumpNumber bool `json:"isTrumpNumber"`
-	// private
-	gameValue int
+	GameValue     int  `json:"gameValue"`
 }
 
 type Deck struct {
@@ -122,7 +121,7 @@ type ByValue []Card
 func (v ByValue) Len() int { return len(v) }
 
 func (v ByValue) Less(i, j int) bool {
-	return true
+	return v[i].GameValue < v[j].GameValue
 }
 
 func (v ByValue) Swap(i, j int) { v[i], v[j] = v[j], v[i] }
