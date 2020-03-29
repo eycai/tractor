@@ -27,9 +27,8 @@ type Server struct {
 }
 
 type Heartbeat struct {
-	LastHeartbeat  time.Time
-	Disconnected   bool
-	PreviousRoomID string
+	LastHeartbeat time.Time
+	Disconnected  bool
 }
 
 func (s *Server) handle(route string, handler http.Handler) {
@@ -51,6 +50,7 @@ func (s *Server) handleRoutes() {
 	s.handleFunc("/api/connect", s.ConnectUser)
 	s.handleFunc("/api/room_list", s.GetRooms)
 	s.handleFunc("/api/join_room", s.JoinRoom)
+	s.handleFunc("/api/leave_room", s.LeaveRoom)
 	s.handleFunc("/api/create_room", s.CreateRoom)
 	s.handleFunc("/api/start_game", s.StartGame)
 	s.handleFunc("/api/whoami", s.GetUser)
@@ -71,23 +71,21 @@ func (s *Server) handleHeartbeat() {
 		for u, h := range s.Heartbeats {
 			if h.Disconnected && time.Since(h.LastHeartbeat) > s.disconnectTimeout {
 				log.Printf("heartbeat disconnect")
-				s.Users[u].Reset()
 				delete(s.Heartbeats, u)
+				roomID := s.Users[u].RoomID
+				if _, ok := s.Rooms[roomID]; ok {
+					s.removeFromRoom(u, roomID)
+					s.broadcastUpdate(roomID, "player_left")
+				}
+				s.Users[u].Reset()
 			} else if !h.Disconnected && time.Since(h.LastHeartbeat) > s.heartbeatTimeout {
 				log.Printf("heartbeat timeout")
 				h.Disconnected = true
 				s.Sockets[s.Users[u].SocketID].Close()
 				s.Users[u].SocketID = ""
+
+				s.setUserConnectionStatus(u, false)
 				delete(s.Sockets, s.Users[u].SocketID)
-
-				roomID := s.Users[u].RoomID
-				if roomID == "" {
-					continue
-				}
-
-				s.removeFromRoom(u, roomID)
-				s.broadcastUpdate(roomID, "player_left")
-				h.PreviousRoomID = roomID
 			}
 		}
 		s.mu.Unlock()
@@ -131,7 +129,7 @@ func (s *Server) Start() {
 	s.UserIDs = make(map[string]string)
 	s.Heartbeats = make(map[string]*Heartbeat)
 	s.heartbeatTimeout = time.Second * 2
-	s.disconnectTimeout = time.Minute
+	s.disconnectTimeout = time.Second * 30
 	go s.WSServer.Serve()
 	defer s.WSServer.Close()
 

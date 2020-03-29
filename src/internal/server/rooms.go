@@ -14,7 +14,7 @@ func (s *Server) createRoom(userID string, name string, capacity int) *models.Ro
 	s.Rooms[roomID] = &models.Room{
 		ID:       roomID,
 		Name:     name,
-		Users:    []string{},
+		Users:    []*models.UserStatus{},
 		Host:     creator,
 		Capacity: capacity,
 	}
@@ -26,9 +26,28 @@ func (s *Server) createRoom(userID string, name string, capacity int) *models.Ro
 
 func (s *Server) addToRoom(userID string, roomID string) {
 	s.Users[userID].RoomID = roomID
-	s.Rooms[roomID].Users = append(s.Rooms[roomID].Users, s.Users[userID].Username)
+	s.Rooms[roomID].Users = append(s.Rooms[roomID].Users, &models.UserStatus{
+		Username:  s.Users[userID].Username,
+		Connected: true,
+	})
 }
 
+func (s *Server) setUserConnectionStatus(userID string, connected bool) {
+	if room, ok := s.Rooms[s.Users[userID].RoomID]; ok {
+		for _, u := range room.Users {
+			if u.Username == s.Users[userID].Username {
+				u.Connected = true
+				break
+			}
+		}
+		if connected {
+			s.broadcastUpdate(s.Users[userID].RoomID, "player_joined")
+		} else {
+			s.broadcastUpdate(s.Users[userID].RoomID, "player_left")
+		}
+
+	}
+}
 func (s *Server) removeFromRoom(userID string, roomID string) {
 	s.Users[userID].RoomID = ""
 	user := s.Users[userID].Username
@@ -42,7 +61,7 @@ func (s *Server) removeFromRoom(userID string, roomID string) {
 	}
 	room.Users = remove(room.Users, i)
 	if user == room.Host && len(room.Users) > 0 {
-		room.Host = room.Users[0]
+		room.Host = room.Users[0].Username
 	}
 
 	if len(room.Users) == 0 {

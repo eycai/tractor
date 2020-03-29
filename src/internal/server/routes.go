@@ -191,24 +191,7 @@ func (s *Server) ConnectUser(w http.ResponseWriter, r *http.Request) {
 	log.Printf("updated the socket id to be %v", s.Users[userID].SocketID)
 	log.Printf("current users: %v", s.Users)
 
-	if h, okH := s.Heartbeats[userID]; okH {
-		if room, okR := s.Rooms[h.PreviousRoomID]; okR {
-			if len(room.Users) >= room.Capacity {
-				return
-			}
-
-			if room.Game != nil {
-				http.Error(w, "game in progress", http.StatusBadRequest)
-				return
-			}
-
-			// s.AddToWSRoom(s.Users[userID].SocketID, req.RoomID)
-			if !room.HasUser(s.Users[userID].Username) {
-				s.addToRoom(userID, h.PreviousRoomID)
-				s.broadcastUpdate(h.PreviousRoomID, "player_joined")
-			}
-		}
-	}
+	s.setUserConnectionStatus(userID, true)
 
 	s.Heartbeats[userID] = &Heartbeat{
 		LastHeartbeat: time.Now(),
@@ -266,7 +249,7 @@ func (s *Server) StartGame(w http.ResponseWriter, r *http.Request) {
 	players := make([]*models.Player, len(s.Rooms[roomID].Users))
 	for i, u := range s.Rooms[roomID].Users {
 		players[i] = &models.Player{
-			Username: u,
+			Username: u.Username,
 			Level:    2,
 		}
 	}

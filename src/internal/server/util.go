@@ -47,7 +47,7 @@ func (s *Server) broadcastUpdate(roomID string, eventName string) {
 	}
 
 	for _, user := range s.Rooms[roomID].Users {
-		userID := s.UserIDs[user]
+		userID := s.UserIDs[user.Username]
 		s.emitUpdateToUser(userID, eventName)
 	}
 }
@@ -128,13 +128,13 @@ func randomString(length int, chars []rune) string {
 	return b.String() // E.g. "ExcbsVQs"
 }
 
-func remove(slice []string, s int) []string {
+func remove(slice []*models.UserStatus, s int) []*models.UserStatus {
 	return append(slice[:s], slice[s+1:]...)
 }
 
-func indexOf(slice []string, s string) int {
+func indexOf(slice []*models.UserStatus, s string) int {
 	for i := range slice {
-		if slice[i] == s {
+		if slice[i].Username == s {
 			return i
 		}
 	}
