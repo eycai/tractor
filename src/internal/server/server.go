@@ -129,7 +129,7 @@ func (s *Server) Start() {
 	s.UserIDs = make(map[string]string)
 	s.Heartbeats = make(map[string]*Heartbeat)
 	s.heartbeatTimeout = time.Second * 2
-	s.disconnectTimeout = time.Second * 30
+	s.disconnectTimeout = time.Minute
 	go s.WSServer.Serve()
 	defer s.WSServer.Close()
 
