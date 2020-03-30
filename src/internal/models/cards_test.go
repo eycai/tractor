@@ -7,6 +7,296 @@ import (
 	"github.com/eycai/tractor/src/internal/models"
 )
 
+func TestIsValidPlay(t *testing.T) {
+	type test struct {
+		prev     [][]models.Card
+		next     [][]models.Card
+		hand     []models.Card
+		expected bool
+	}
+
+	tests := []test{
+		{
+			prev: [][]models.Card{
+				[]models.Card{
+					{
+						Value: 5,
+						Suit:  models.Diamond,
+					},
+					{
+						Value: 5,
+						Suit:  models.Diamond,
+					},
+				}, []models.Card{
+					{
+						Value: 3,
+						Suit:  models.Diamond,
+					},
+					{
+						Value: 3,
+						Suit:  models.Diamond,
+					},
+				},
+			},
+			next: [][]models.Card{
+				[]models.Card{
+					{
+						Value: 2,
+						Suit:  models.Diamond,
+					},
+					{
+						Value: 2,
+						Suit:  models.Diamond,
+					},
+				}, []models.Card{
+					{
+						Value: 1,
+						Suit:  models.Diamond,
+					},
+				}, []models.Card{
+					{
+						Value: 6,
+						Suit:  models.Spade,
+					},
+				},
+			},
+			hand: []models.Card{
+				{
+					Value: 6,
+					Suit:  models.Spade,
+				},
+				{
+					Value: 1,
+					Suit:  models.Diamond,
+				},
+				{
+					Value: 2,
+					Suit:  models.Diamond,
+				},
+				{
+					Value: 2,
+					Suit:  models.Diamond,
+				},
+			},
+			expected: true,
+		}, {
+			prev: [][]models.Card{
+				[]models.Card{
+					{
+						Value: 5,
+						Suit:  models.Diamond,
+					},
+					{
+						Value: 5,
+						Suit:  models.Diamond,
+					},
+				}, []models.Card{
+					{
+						Value: 3,
+						Suit:  models.Diamond,
+					},
+					{
+						Value: 3,
+						Suit:  models.Diamond,
+					},
+				},
+			},
+			next: [][]models.Card{
+				[]models.Card{
+					{
+						Value: 2,
+						Suit:  models.Diamond,
+					},
+					{
+						Value: 2,
+						Suit:  models.Diamond,
+					},
+				}, []models.Card{
+					{
+						Value: 1,
+						Suit:  models.Diamond,
+					},
+				}, []models.Card{
+					{
+						Value: 6,
+						Suit:  models.Spade,
+					},
+				},
+			},
+			hand: []models.Card{
+				{
+					Value: 6,
+					Suit:  models.Diamond,
+				},
+				{
+					Value: 1,
+					Suit:  models.Diamond,
+				},
+				{
+					Value: 2,
+					Suit:  models.Diamond,
+				},
+				{
+					Value: 2,
+					Suit:  models.Diamond,
+				},
+			},
+			expected: false,
+		}, {
+			prev: [][]models.Card{
+				[]models.Card{
+					{
+						Value:       5,
+						Suit:        models.Diamond,
+						IsTrumpSuit: true,
+					},
+					{
+						Value:       5,
+						Suit:        models.Diamond,
+						IsTrumpSuit: true,
+					},
+				},
+			},
+			next: [][]models.Card{
+				[]models.Card{
+					{
+						Value:         2,
+						Suit:          models.Spade,
+						IsTrumpNumber: true,
+					},
+				}, []models.Card{
+					{
+						Value: 5,
+						Suit:  models.Spade,
+					},
+				},
+			},
+			hand: []models.Card{
+				{
+					Value:         2,
+					Suit:          models.Spade,
+					IsTrumpNumber: true,
+				},
+				{
+					Value: 5,
+					Suit:  models.Spade,
+				},
+				{
+					Value: 7,
+					Suit:  models.Spade,
+				},
+			},
+			expected: true,
+		}, {
+			prev: [][]models.Card{
+				[]models.Card{
+					{
+						Value:       5,
+						Suit:        models.Diamond,
+						IsTrumpSuit: true,
+					},
+					{
+						Value:       5,
+						Suit:        models.Diamond,
+						IsTrumpSuit: true,
+					},
+				},
+			},
+			next: [][]models.Card{
+				[]models.Card{
+					{
+						Value:         2,
+						Suit:          models.Spade,
+						IsTrumpNumber: true,
+					},
+				}, []models.Card{
+					{
+						Value: 5,
+						Suit:  models.Spade,
+					},
+				},
+			},
+			hand: []models.Card{
+				{
+					Value:         2,
+					Suit:          models.Spade,
+					IsTrumpNumber: true,
+				},
+				{
+					Value:       8,
+					Suit:        models.Diamond,
+					IsTrumpSuit: true,
+				},
+				{
+					Value: 7,
+					Suit:  models.Spade,
+				},
+			},
+			expected: false,
+		}, {
+			prev: [][]models.Card{
+				[]models.Card{
+					{
+						Value:       5,
+						Suit:        models.Diamond,
+						IsTrumpSuit: true,
+					},
+					{
+						Value:       5,
+						Suit:        models.Diamond,
+						IsTrumpSuit: true,
+					},
+				}, []models.Card{
+					{
+						Value:       7,
+						Suit:        models.Diamond,
+						IsTrumpSuit: true,
+					},
+				},
+			},
+			next: [][]models.Card{
+				[]models.Card{
+					{
+						Value:         3,
+						Suit:          models.Spade,
+						IsTrumpNumber: true,
+					},
+				}, []models.Card{
+					{
+						Value:       6,
+						Suit:        models.Diamond,
+						IsTrumpSuit: true,
+					},
+				},
+			},
+			hand: []models.Card{
+				{
+					Value:         3,
+					Suit:          models.Spade,
+					IsTrumpNumber: true,
+				},
+				{
+					Value:       6,
+					Suit:        models.Diamond,
+					IsTrumpSuit: true,
+				},
+				{
+					Value: 7,
+					Suit:  models.Spade,
+				},
+			},
+			expected: false,
+		},
+	}
+
+	for _, tc := range tests {
+		valid := models.IsValidPlay(tc.prev, tc.next, tc.hand)
+		if valid != tc.expected {
+			t.Errorf("expected %v but got %v for tricks %v, %v", tc.expected, valid, tc.prev, tc.next)
+		}
+	}
+}
+
 func TestNextTrickWins(t *testing.T) {
 	type test struct {
 		prev     []models.Trick

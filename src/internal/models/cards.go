@@ -56,6 +56,61 @@ type Trick struct {
 	IsTrump               bool
 }
 
+func numCardsOfSuit(hand []Card, suit Suit) int {
+	n := 0
+	for _, c := range hand {
+		if c.Suit == suit {
+			n++
+		}
+	}
+	return n
+}
+
+func numTrumpCards(hand []Card) int {
+	n := 0
+	for _, c := range hand {
+		if c.IsTrump() {
+			n++
+		}
+	}
+	return n
+}
+
+func cardList(hand [][]Card) []Card {
+	cards := []Card{}
+	for _, c := range hand {
+		cards = append(cards, c...)
+	}
+	return cards
+}
+
+func lenPlay(cards [][]Card) int {
+	n := 0
+	for _, c := range cards {
+		n += len(c)
+	}
+	return n
+}
+
+// IsValidPlay returns true if the two plays match in length, and suit is valid
+func IsValidPlay(prev [][]Card, next [][]Card, hand []Card) bool {
+	if lenPlay(prev) != lenPlay(next) {
+		return false
+	}
+
+	// used fewer cards of suit than min(available, length of hand)
+	if prev[0][0].IsTrump() && numTrumpCards(cardList(next)) <
+		int(math.Min(float64(numTrumpCards(hand)), float64(len(hand)))) {
+		return false
+	}
+	if !prev[0][0].IsTrump() && numCardsOfSuit(cardList(next), prev[0][0].Suit) <
+		int(math.Min(float64(numCardsOfSuit(hand, prev[0][0].Suit)), float64(len(hand)))) {
+		return false
+	}
+
+	return true
+}
+
 // ParseTrick parses a list of cards into a trick.
 func ParseTrick(cards []Card) (Trick, error) {
 	sort.Sort(sort.Reverse(ByValue(cards)))
