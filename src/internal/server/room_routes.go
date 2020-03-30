@@ -246,14 +246,14 @@ func (s *Server) StartGame(w http.ResponseWriter, r *http.Request) {
 		TrumpNumber: 2,
 	}
 
-	players := make([]*models.Player, len(s.Rooms[roomID].Users))
-	for i, u := range s.Rooms[roomID].Users {
-		players[i] = &models.Player{
+	players := make(map[string]*models.Player, len(s.Rooms[roomID].Users))
+	for _, u := range s.Rooms[roomID].Users {
+		players[u.Username] = &models.Player{
 			Username: u.Username,
 			Level:    2,
 		}
 	}
-
+	game.Players = players
 	s.Rooms[roomID].Game = &game
 	s.broadcastUpdate(roomID, "game_started")
 	w.WriteHeader(http.StatusOK)
