@@ -9,8 +9,8 @@ import { post } from "../../api/fetch";
 const Lobby = props => {
   const usersList = props.roomInfo
     ? props.roomInfo.users.map(u => (
-        <div className="u-medium-text" key={u}>
-          {u}
+        <div className="u-medium-text" key={u.username}>
+          {u.username}
         </div>
       ))
     : null;
