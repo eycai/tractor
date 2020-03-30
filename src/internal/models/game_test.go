@@ -42,16 +42,9 @@ func TestDeck(t *testing.T) {
 		t.Errorf("incorrect value assignments")
 	}
 
-	g = models.Game{
-		Players: []*models.Player{
-			&models.Player{},
-			&models.Player{},
-			&models.Player{},
-			&models.Player{},
-		},
-		TrumpNumber: 5,
-		TrumpSuit:   models.Club,
-	}
+	g.TrumpNumber = 5
+	g.TrumpSuit = models.Club
+
 	d = g.GetDeck()
 	if len(d.Cards) != 108 {
 		t.Errorf("expected deck of length 108, got %d", len(d.Cards))
@@ -60,16 +53,9 @@ func TestDeck(t *testing.T) {
 		t.Errorf("incorrect value assignments")
 	}
 
-	g = models.Game{
-		Players: []*models.Player{
-			&models.Player{},
-			&models.Player{},
-			&models.Player{},
-			&models.Player{},
-		},
-		TrumpNumber: 1,
-		TrumpSuit:   models.Heart,
-	}
+	g.TrumpNumber = 1
+	g.TrumpSuit = models.Heart
+
 	d = g.GetDeck()
 	if len(d.Cards) != 108 {
 		t.Errorf("expected deck of length 108, got %d", len(d.Cards))

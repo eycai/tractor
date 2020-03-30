@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"sort"
 	"time"
 )
 
@@ -55,7 +56,9 @@ type Trick struct {
 	IsTrump               bool
 }
 
-func parseTrick(cards []Card) (Trick, error) {
+// ParseTrick parses a list of cards into a trick.
+func ParseTrick(cards []Card) (Trick, error) {
+	sort.Sort(sort.Reverse(ByValue(cards)))
 	trick := Trick{
 		Pattern:     NOfAKind,
 		NumCards:    len(cards),
@@ -66,11 +69,21 @@ func parseTrick(cards []Card) (Trick, error) {
 
 	numConsecutive := 1
 	for i := 0; i < len(cards)-1; i++ {
-		if cards[i].Value != cards[i+1].Value {
+		if !(trick.IsTrump == cards[i+1].IsTrump()) {
+			return trick, fmt.Errorf("either all cards should be trump, or none")
+		}
+		if !(trick.IsTrump && cards[i+1].IsTrump()) && trick.Suit != cards[i+1].Suit {
+			return trick, fmt.Errorf("all suits should be the same")
+		}
+		if cards[i] != cards[i+1] {
 			if trick.TractorNumConsecutive != 0 && trick.TractorNumConsecutive != numConsecutive {
-				return trick, fmt.Errorf("invalid play")
+				return trick, fmt.Errorf("tractor incorrect length")
 			} else if !IsConsecutive(cards[i], cards[i+1]) {
-				return trick, fmt.Errorf("invalid play")
+				if !(cards[0].Value == 1 && cards[len(cards)-1].Value == 2) {
+					return trick, fmt.Errorf("tractor not consecutive")
+				} else {
+					trick.LargestCard = cards[i+1]
+				}
 			}
 			trick.Pattern = Tractor
 			trick.TractorNumConsecutive = numConsecutive
@@ -79,34 +92,23 @@ func parseTrick(cards []Card) (Trick, error) {
 			numConsecutive++
 		}
 	}
+	if trick.TractorNumConsecutive != 0 && numConsecutive != trick.TractorNumConsecutive {
+		return trick, fmt.Errorf("tractor incorrect length")
+	}
 	return trick, nil
 }
 
-// assumes same suit or both trump
+// IsConsecutive determines if two cards are consecutive. It assumes that the cards are
+// of the same suit.
 func IsConsecutive(a Card, b Card) bool {
-	if a.IsTrumpNumber {
-		return IsConsecutiveTrumpNumber(a, b)
-	} else if b.IsTrumpNumber {
-		return IsConsecutiveTrumpNumber(b, a)
-	} else if a.Suit == b.Suit {
-		return math.Abs(float64(a.Value-b.Value)) == 1
-	} else {
-		return false
-	}
+	return math.Abs(float64(a.GameValue-b.GameValue)) == 1
 }
 
-func IsConsecutiveTrumpNumber(a Card, b Card) bool {
-	if a.IsTrumpSuit {
-		return (b.IsTrumpNumber && !b.IsTrumpSuit) || (b.Suit == Joker && b.Value == 1)
-	} else {
-		return (b.IsTrumpNumber && b.IsTrumpSuit) || (b.IsTrumpSuit && b.Value == 1)
-	}
-}
-
-func getTricks(cards [][]Card, trumpSuit Suit, trumpNumber int) ([]Trick, error) {
+// GetTricks parses tricks out of a play.
+func GetTricks(cards [][]Card, trumpSuit Suit, trumpNumber int) ([]Trick, error) {
 	tricks := make([]Trick, len(cards))
 	for i, t := range cards {
-		trick, err := parseTrick(t)
+		trick, err := ParseTrick(t)
 		if err != nil {
 			return tricks, err
 		}
@@ -115,17 +117,90 @@ func getTricks(cards [][]Card, trumpSuit Suit, trumpNumber int) ([]Trick, error)
 	return tricks, nil
 }
 
-// sorting
-type ByValue []Card
-
-func (v ByValue) Len() int { return len(v) }
-
-func (v ByValue) Less(i, j int) bool {
-	return v[i].GameValue < v[j].GameValue
+func trickSuitsMatch(t []Trick) bool {
+	suitToMatch := t[0].Suit
+	isTrump := t[0].IsTrump
+	for _, s := range t {
+		if isTrump {
+			if !s.IsTrump {
+				return false
+			}
+		} else if s.Suit != suitToMatch {
+			return false
+		}
+	}
+	return true
 }
 
-func (v ByValue) Swap(i, j int) { v[i], v[j] = v[j], v[i] }
+func typesMatch(a Trick, b Trick) bool {
+	return a.Pattern == b.Pattern &&
+		a.NumCards == b.NumCards &&
+		a.TractorNumConsecutive == b.TractorNumConsecutive
+}
 
+// NextTrickWins returns true if the second play is larger; else, false.
+func NextTrickWins(prev []Trick, next []Trick) bool {
+	sort.Sort(sort.Reverse(ByType(prev)))
+	sort.Sort(sort.Reverse(ByType(next)))
+
+	if len(prev) != len(next) {
+		// tricks don't match
+		return false
+	}
+
+	if !trickSuitsMatch(next) {
+		return false
+	}
+
+	if prev[0].IsTrump && !next[0].IsTrump {
+		return false
+	}
+	if !prev[0].IsTrump && !next[0].IsTrump && prev[0].Suit != next[0].Suit {
+		// suits don't match
+		return false
+	}
+
+	// only remaining: neither are trump and suits match, or
+	// both are trump, or
+	// b is trump but not a.
+	// in all cases, check that pattern maps, and that game value is larger.
+
+	for i, t := range prev {
+		if !typesMatch(t, next[i]) || t.LargestCard.GameValue > next[i].LargestCard.GameValue {
+			return false
+		}
+	}
+	return true
+}
+
+// ByValue allows for sorting cards by game value
+type ByValue []Card
+
+func (v ByValue) Len() int           { return len(v) }
+func (v ByValue) Less(i, j int) bool { return v[i].GameValue < v[j].GameValue }
+func (v ByValue) Swap(i, j int)      { v[i], v[j] = v[j], v[i] }
+
+type ByType []Trick
+
+// ByType allows for sorting tricks by type.
+// Our desired sort patterns are:
+// By pattern, then by length, then by sublength, then by game value.
+func (v ByType) Len() int { return len(v) }
+func (v ByType) Less(i, j int) bool {
+	if v[i].Pattern != v[j].Pattern {
+		return v[i].Pattern == NOfAKind
+	}
+	if v[i].NumCards != v[j].NumCards {
+		return v[i].NumCards < v[j].NumCards
+	}
+	if v[i].Pattern == Tractor && v[i].TractorNumConsecutive != v[j].TractorNumConsecutive {
+		return v[i].TractorNumConsecutive < v[j].TractorNumConsecutive
+	}
+	return v[i].LargestCard.GameValue < v[j].LargestCard.GameValue
+}
+func (v ByType) Swap(i, j int) { v[i], v[j] = v[j], v[i] }
+
+// IsTrump returns true if the card is trump
 func (c *Card) IsTrump() bool {
 	return c.IsTrumpNumber || c.IsTrumpSuit
 }
