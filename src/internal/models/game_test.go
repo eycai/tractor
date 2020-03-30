@@ -6,18 +6,30 @@ import (
 	"github.com/eycai/tractor/src/internal/models"
 )
 
-func testGameValues(d models.Deck) bool {
-	values := make([]int, 52)
+func testValues(d models.Deck) bool {
+	values := make([]int, 13)
+	suits := make(map[models.Suit]int)
 	for _, c := range d.Cards {
-		values[c.GameValue]++
+		if c.Suit != models.Joker {
+			values[c.Value-1]++
+		}
+		suits[c.Suit]++
 	}
-	for i, v := range values {
-		if i == 48 {
-			if v != 6 {
+	numDecks := len(d.Cards) / 54
+	for _, v := range values {
+		if v != numDecks*4 {
+			return false
+		}
+	}
+	for s, n := range suits {
+		if s == models.Joker {
+			if n != 2*numDecks {
 				return false
 			}
-		} else if v != 2 {
-			return false
+		} else {
+			if n != 13*numDecks {
+				return false
+			}
 		}
 	}
 	return true
@@ -31,36 +43,49 @@ func TestDeck(t *testing.T) {
 			"c": &models.Player{},
 			"d": &models.Player{},
 		},
-		TrumpNumber: 2,
-		TrumpSuit:   models.Diamond,
 	}
 	d := g.GetDeck()
 	if len(d.Cards) != 108 {
 		t.Errorf("expected deck of length 108, got %d", len(d.Cards))
 	}
-	if !testGameValues(d) {
+	if !testValues(d) {
 		t.Errorf("incorrect value assignments")
 	}
 
-	g.TrumpNumber = 5
-	g.TrumpSuit = models.Club
+	g = models.Game{
+		Players: map[string]*models.Player{
+			"a": &models.Player{},
+			"b": &models.Player{},
+			"c": &models.Player{},
+			"d": &models.Player{},
+			"e": &models.Player{},
+		},
+	}
 
 	d = g.GetDeck()
 	if len(d.Cards) != 108 {
 		t.Errorf("expected deck of length 108, got %d", len(d.Cards))
 	}
-	if !testGameValues(d) {
+	if !testValues(d) {
 		t.Errorf("incorrect value assignments")
 	}
 
-	g.TrumpNumber = 1
-	g.TrumpSuit = models.Heart
+	g = models.Game{
+		Players: map[string]*models.Player{
+			"a": &models.Player{},
+			"b": &models.Player{},
+			"c": &models.Player{},
+			"d": &models.Player{},
+			"e": &models.Player{},
+			"f": &models.Player{},
+		},
+	}
 
 	d = g.GetDeck()
-	if len(d.Cards) != 108 {
-		t.Errorf("expected deck of length 108, got %d", len(d.Cards))
+	if len(d.Cards) != 162 {
+		t.Errorf("expected deck of length 162, got %d", len(d.Cards))
 	}
-	if !testGameValues(d) {
+	if !testValues(d) {
 		t.Errorf("incorrect value assignments")
 	}
 }

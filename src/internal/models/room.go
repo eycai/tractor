@@ -22,3 +22,11 @@ func (r *Room) HasUser(user string) bool {
 	}
 	return false
 }
+
+func (r *Room) Usernames() []string {
+	users := make([]string, len(r.Users))
+	for i, u := range r.Users {
+		users[i] = u.Username
+	}
+	return users
+}

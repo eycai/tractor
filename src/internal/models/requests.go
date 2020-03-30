@@ -25,6 +25,11 @@ type LeaveRoomRequest struct {
 	RoomID string `json:"roomId"`
 }
 
+type FlipCardsRequest struct {
+	Card     Card
+	NumCards int
+}
+
 type UpdateEvent struct {
 	Room  *Room  `json:"room"`
 	User  *User  `json:"user"`

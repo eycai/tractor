@@ -92,6 +92,21 @@ func lenPlay(cards [][]Card) int {
 	return n
 }
 
+// GetPoints returns the number of points in a hand.
+func GetPoints(hand [][]Card) int {
+	points := 0
+	for _, trick := range hand {
+		for _, c := range trick {
+			if c.Value == 5 {
+				points += 5
+			} else if c.Value == 10 || c.Value == 13 {
+				points += 10
+			}
+		}
+	}
+	return points
+}
+
 // IsValidPlay returns true if the two plays match in length, and suit is valid
 func IsValidPlay(prev [][]Card, next [][]Card, hand []Card) bool {
 	if lenPlay(prev) != lenPlay(next) {
@@ -235,11 +250,11 @@ func (v ByValue) Len() int           { return len(v) }
 func (v ByValue) Less(i, j int) bool { return v[i].GameValue < v[j].GameValue }
 func (v ByValue) Swap(i, j int)      { v[i], v[j] = v[j], v[i] }
 
-type ByType []Trick
-
 // ByType allows for sorting tricks by type.
 // Our desired sort patterns are:
 // By pattern, then by length, then by sublength, then by game value.
+type ByType []Trick
+
 func (v ByType) Len() int { return len(v) }
 func (v ByType) Less(i, j int) bool {
 	if v[i].Pattern != v[j].Pattern {

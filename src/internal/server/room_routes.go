@@ -9,6 +9,52 @@ import (
 	"github.com/eycai/tractor/src/internal/models"
 )
 
+func (s *Server) TestUpdateRoom(w http.ResponseWriter, r *http.Request) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	room := &models.Room{}
+
+	err := json.NewDecoder(r.Body).Decode(room)
+	if err != nil {
+		http.Error(w, "error decoding request", http.StatusBadRequest)
+		return
+	}
+
+	log.Printf("room id: %s", room.ID)
+	if _, ok := s.Rooms[room.ID]; ok {
+		log.Printf("before %v", s.Rooms[room.ID])
+		s.Rooms[room.ID] = room
+		log.Printf("before %v", s.Rooms[room.ID])
+	} else {
+		http.Error(w, "no such room", http.StatusBadRequest)
+	}
+	returnSuccess(w)
+}
+
+func (s *Server) TestUpdateUser(w http.ResponseWriter, r *http.Request) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	user := &models.User{}
+
+	err := json.NewDecoder(r.Body).Decode(user)
+	if err != nil {
+		http.Error(w, "error decoding request", http.StatusBadRequest)
+		return
+	}
+
+	log.Printf("user id: %s", user.ID)
+	if _, ok := s.Users[user.ID]; ok {
+		log.Printf("before %v", s.Users[user.ID])
+		s.Users[user.ID] = user
+		log.Printf("after %v", s.Users[user.ID])
+	} else {
+		http.Error(w, "no such user", http.StatusBadRequest)
+	}
+	returnSuccess(w)
+}
+
 func (s *Server) Heartbeat(w http.ResponseWriter, r *http.Request) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -244,6 +290,7 @@ func (s *Server) StartGame(w http.ResponseWriter, r *http.Request) {
 	game := models.Game{
 		Turn:        s.Users[userID].Username,
 		TrumpNumber: 2,
+		GamePhase:   models.Drawing,
 	}
 
 	players := make(map[string]*models.Player, len(s.Rooms[roomID].Users))

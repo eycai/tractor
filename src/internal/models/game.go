@@ -1,35 +1,76 @@
 package models
 
 type Game struct {
-	Players     map[string]*Player `json:"players"`
-	Turn        string             `json:"turn"`
-	TrumpSuit   Suit               `json:"trumpSuit"`
-	TrumpNumber int                `json:"trumpNumber"`
-	Banker      string             `json:"banker"`
-	CardsInPlay map[string][]Card  `json:"cardsInPlay"`
-	GamePhase   Phase              `json:"gamePhase"`
+	Players              map[string]*Player `json:"players"`
+	Turn                 string             `json:"turn"`
+	TrumpSuit            Suit               `json:"trumpSuit"`
+	TrumpNumber          int                `json:"trumpNumber"`
+	Banker               string             `json:"banker"`
+	GamePhase            Phase              `json:"gamePhase"`
+	TrumpFlipUser        string             `json:"trumpFlipUser"`
+	TrumpNumCardsFlipped int                `json:"trumpNumCardsFlipped"`
 }
 
 type Phase string
 
 const (
-	Drawing  Phase = "DRAWING"
-	Playing  Phase = "PLAYING"
-	EndRound Phase = "END_ROUND"
+	Drawing         Phase = "DRAWING"
+	DrawingComplete Phase = "DRAWING_COMPLETE"
+	SetKitty        Phase = "SET_KITTY"
+	Playing         Phase = "PLAYING"
+	EndRound        Phase = "END_ROUND"
 )
 
-func (g *Game) GetDeck() Deck {
-	numDecks := len(g.Players) / 2
-	deck := []Card{}
+func (g *Game) FlipCard(c Card, numCards int, user string) bool {
+	if g.GamePhase != Drawing && g.GamePhase != DrawingComplete {
+		// can't set after done drawing
+		return false
+	}
+
+	if user == g.TrumpFlipUser && c.Suit != g.TrumpSuit {
+		return false
+	}
+
+	if c.Value != g.TrumpNumber && c.Suit != Joker {
+		return false
+	}
+
+	if user == g.TrumpFlipUser {
+		// reinforce
+		g.TrumpNumCardsFlipped += numCards
+		return true
+	}
+
+	if (numCards > g.TrumpNumCardsFlipped && c.Value == g.TrumpNumber) ||
+		numCards >= g.TrumpNumCardsFlipped && c.Suit == Joker {
+		// overflip
+		g.TrumpSuit = c.Suit
+		g.TrumpNumCardsFlipped = numCards
+		g.TrumpFlipUser = user
+		return true
+	}
+
+	return false
+}
+
+// GetCardUpdates gets a map from plain card to card with trump updates after trump is set.
+func (g *Game) GetCardUpdates() map[Card]Card {
+	cardValues := make(map[Card]Card)
 	suitNum := 0
 	for _, s := range Suits {
 		if s == Joker {
-			newCards := make([]Card, 2*numDecks)
-			for i := 0; i < numDecks; i++ {
-				newCards[2*i] = Card{Value: 1, Suit: s, GameValue: 50, IsTrumpSuit: true}
-				newCards[2*i+1] = Card{Value: 2, Suit: s, GameValue: 51, IsTrumpSuit: true}
+			cardValues[Card{Value: 1, Suit: s}] = Card{
+				Value:       1,
+				Suit:        s,
+				GameValue:   50,
+				IsTrumpSuit: true,
 			}
-			deck = append(deck, newCards...)
+			cardValues[Card{Value: 2, Suit: s}] = Card{
+				Value:       2,
+				Suit:        s,
+				GameValue:   51,
+				IsTrumpSuit: true,
+			}
 		} else {
 			currentValue := suitNum * 12
 			if s == g.TrumpSuit {
@@ -38,7 +79,6 @@ func (g *Game) GetDeck() Deck {
 				suitNum++
 			}
 			for i := 1; i <= 13; i++ {
-				newCards := make([]Card, numDecks)
 				gameValue := currentValue
 				if i == g.TrumpNumber && s == g.TrumpSuit {
 					gameValue = 49
@@ -49,14 +89,36 @@ func (g *Game) GetDeck() Deck {
 				} else {
 					currentValue++
 				}
+				cardValues[Card{Value: i, Suit: s}] = Card{
+					Value:         i,
+					Suit:          s,
+					GameValue:     gameValue,
+					IsTrumpSuit:   s == g.TrumpSuit,
+					IsTrumpNumber: i == g.TrumpNumber,
+				}
+			}
+		}
+	}
+	return cardValues
+}
+
+// GetDeck gets a plain deck, with no trump or game value fields set.
+func (g *Game) GetDeck() Deck {
+	numDecks := len(g.Players) / 2
+	deck := []Card{}
+	for _, s := range Suits {
+		if s == Joker {
+			newCards := make([]Card, 2*numDecks)
+			for i := 0; i < numDecks; i++ {
+				newCards[2*i] = Card{Value: 1, Suit: s}
+				newCards[2*i+1] = Card{Value: 2, Suit: s}
+			}
+			deck = append(deck, newCards...)
+		} else {
+			for i := 1; i <= 13; i++ {
+				newCards := make([]Card, numDecks)
 				for j := range newCards {
-					newCards[j] = Card{Value: i, Suit: s, GameValue: gameValue}
-					if s == g.TrumpSuit {
-						newCards[j].IsTrumpSuit = true
-					}
-					if i == g.TrumpNumber {
-						newCards[j].IsTrumpNumber = true
-					}
+					newCards[j] = Card{Value: i, Suit: s}
 				}
 				deck = append(deck, newCards...)
 			}

@@ -15,3 +15,7 @@ func (u *User) Reset() {
 	u.Hand = []Card{}
 	u.Kitty = []Card{}
 }
+
+func (u *User) DealCard(c Card) {
+	u.Hand = append(u.Hand, c)
+}

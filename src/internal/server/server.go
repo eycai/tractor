@@ -56,6 +56,10 @@ func (s *Server) handleRoutes() {
 	s.handleFunc("/api/whoami", s.GetUser)
 	s.handleFunc("/api/room_info", s.RoomInfo)
 	s.handleFunc("/api/heartbeat", s.Heartbeat)
+	s.handleFunc("/api/begin_drawing", s.BeginDrawing)
+	s.handleFunc("/api/flip_cards", s.FlipCards)
+	s.handleFunc("/api/test_set_user", s.TestUpdateUser)
+	s.handleFunc("/api/test_set_room", s.TestUpdateRoom)
 }
 
 func (s *Server) serveClient() {
