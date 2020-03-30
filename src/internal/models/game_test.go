@@ -25,11 +25,11 @@ func testGameValues(d models.Deck) bool {
 
 func TestDeck(t *testing.T) {
 	g := models.Game{
-		Players: []*models.Player{
-			&models.Player{},
-			&models.Player{},
-			&models.Player{},
-			&models.Player{},
+		Players: map[string]*models.Player{
+			"a": &models.Player{},
+			"b": &models.Player{},
+			"c": &models.Player{},
+			"d": &models.Player{},
 		},
 		TrumpNumber: 2,
 		TrumpSuit:   models.Diamond,

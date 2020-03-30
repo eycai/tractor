@@ -81,7 +81,9 @@ func (s *Server) handleHeartbeat() {
 			} else if !h.Disconnected && time.Since(h.LastHeartbeat) > s.heartbeatTimeout {
 				log.Printf("heartbeat timeout")
 				h.Disconnected = true
-				s.Sockets[s.Users[u].SocketID].Close()
+				if socket, ok := s.Sockets[s.Users[u].SocketID]; ok {
+					socket.Close()
+				}
 				s.Users[u].SocketID = ""
 
 				s.setUserConnectionStatus(u, false)

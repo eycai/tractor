@@ -1,13 +1,22 @@
 package models
 
 type Game struct {
-	Players     []*Player         `json:"players"`
-	Turn        string            `json:"turn"`
-	TrumpSuit   Suit              `json:"trumpSuit"`
-	TrumpNumber int               `json:"trumpNumber"`
-	Banker      string            `json:"banker"`
-	CardsInPlay map[string][]Card `json:"cardsInPlay"`
+	Players     map[string]*Player `json:"players"`
+	Turn        string             `json:"turn"`
+	TrumpSuit   Suit               `json:"trumpSuit"`
+	TrumpNumber int                `json:"trumpNumber"`
+	Banker      string             `json:"banker"`
+	CardsInPlay map[string][]Card  `json:"cardsInPlay"`
+	GamePhase   Phase              `json:"gamePhase"`
 }
+
+type Phase string
+
+const (
+	Drawing  Phase = "DRAWING"
+	Playing  Phase = "PLAYING"
+	EndRound Phase = "END_ROUND"
+)
 
 func (g *Game) GetDeck() Deck {
 	numDecks := len(g.Players) / 2
