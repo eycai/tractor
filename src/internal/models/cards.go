@@ -9,11 +9,14 @@ import (
 )
 
 type Card struct {
-	Value         int  `json:"value"`
-	Suit          Suit `json:"suit"`
-	IsTrumpSuit   bool `json:"isTrumpSuit"`
-	IsTrumpNumber bool `json:"isTrumpNumber"`
-	GameValue     int  `json:"gameValue"`
+	Value int  `json:"value"`
+	Suit  Suit `json:"suit"`
+	// IsTrumpSuit   bool `json:"isTrumpSuit"`
+	// IsTrumpNumber bool `json:"isTrumpNumber"`
+	// GameValue     int  `json:"gameValue"`
+	isTrumpSuit   bool
+	isTrumpNumber bool
+	gameValue     int
 }
 
 type Deck struct {
@@ -171,7 +174,7 @@ func ParseTrick(cards []Card) (Trick, error) {
 // IsConsecutive determines if two cards are consecutive. It assumes that the cards are
 // of the same suit.
 func IsConsecutive(a Card, b Card) bool {
-	return math.Abs(float64(a.GameValue-b.GameValue)) == 1
+	return math.Abs(float64(a.gameValue-b.gameValue)) == 1
 }
 
 // GetTricks parses tricks out of a play.
@@ -236,7 +239,7 @@ func NextTrickWins(prev []Trick, next []Trick) bool {
 	// in all cases, check that pattern maps, and that game value is larger.
 
 	for i, t := range prev {
-		if !typesMatch(t, next[i]) || t.LargestCard.GameValue > next[i].LargestCard.GameValue {
+		if !typesMatch(t, next[i]) || t.LargestCard.gameValue > next[i].LargestCard.gameValue {
 			return false
 		}
 	}
@@ -247,7 +250,7 @@ func NextTrickWins(prev []Trick, next []Trick) bool {
 type ByValue []Card
 
 func (v ByValue) Len() int           { return len(v) }
-func (v ByValue) Less(i, j int) bool { return v[i].GameValue < v[j].GameValue }
+func (v ByValue) Less(i, j int) bool { return v[i].gameValue < v[j].gameValue }
 func (v ByValue) Swap(i, j int)      { v[i], v[j] = v[j], v[i] }
 
 // ByType allows for sorting tricks by type.
@@ -266,11 +269,39 @@ func (v ByType) Less(i, j int) bool {
 	if v[i].Pattern == Tractor && v[i].TractorNumConsecutive != v[j].TractorNumConsecutive {
 		return v[i].TractorNumConsecutive < v[j].TractorNumConsecutive
 	}
-	return v[i].LargestCard.GameValue < v[j].LargestCard.GameValue
+	return v[i].LargestCard.gameValue < v[j].LargestCard.gameValue
 }
 func (v ByType) Swap(i, j int) { v[i], v[j] = v[j], v[i] }
 
 // IsTrump returns true if the card is trump
 func (c *Card) IsTrump() bool {
-	return c.IsTrumpNumber || c.IsTrumpSuit
+	return c.isTrumpNumber || c.isTrumpSuit
+}
+
+func (c *Card) GameValue() int {
+	return c.gameValue
+}
+
+func (c *Card) IsTrumpNumber() bool {
+	return c.isTrumpNumber
+}
+
+func (c *Card) IsTrumpSuit() bool {
+	return c.isTrumpSuit
+}
+
+func (c *Card) WithGameValues(vals map[Card]int) Card {
+	c.gameValue = vals[*c]
+	return *c
+}
+
+func (c *Card) WithTrump(n int, s Suit) Card {
+	if c.Value == n {
+		c.isTrumpNumber = true
+	}
+
+	if c.Suit == s || c.Suit == Joker {
+		c.isTrumpSuit = true
+	}
+	return *c
 }

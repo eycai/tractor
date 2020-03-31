@@ -9,6 +9,8 @@ type Game struct {
 	GamePhase            Phase              `json:"gamePhase"`
 	TrumpFlipUser        string             `json:"trumpFlipUser"`
 	TrumpNumCardsFlipped int                `json:"trumpNumCardsFlipped"`
+	round                int
+	kitty                []Card
 }
 
 type Phase string
@@ -20,6 +22,26 @@ const (
 	Playing         Phase = "PLAYING"
 	EndRound        Phase = "END_ROUND"
 )
+
+func (g *Game) KittySize() int {
+	numPlayers := len(g.Players)
+	numCards := (len(g.Players) / 2) * 54
+	kitty := numCards % numPlayers
+	for kitty <= 4 {
+		kitty += numPlayers
+	}
+	return kitty
+}
+
+func (g *Game) SetKitty(k []Card) {
+	g.kitty = k
+}
+
+func (g *Game) GetKitty() []Card {
+	k := g.kitty
+	g.kitty = []Card{}
+	return k
+}
 
 func (g *Game) FlipCard(c Card, numCards int, user string) bool {
 	if g.GamePhase != Drawing && g.GamePhase != DrawingComplete {
@@ -54,23 +76,13 @@ func (g *Game) FlipCard(c Card, numCards int, user string) bool {
 }
 
 // GetCardUpdates gets a map from plain card to card with trump updates after trump is set.
-func (g *Game) GetCardUpdates() map[Card]Card {
-	cardValues := make(map[Card]Card)
+func (g *Game) GetCardValues() map[Card]int {
+	cardValues := make(map[Card]int)
 	suitNum := 0
 	for _, s := range Suits {
 		if s == Joker {
-			cardValues[Card{Value: 1, Suit: s}] = Card{
-				Value:       1,
-				Suit:        s,
-				GameValue:   50,
-				IsTrumpSuit: true,
-			}
-			cardValues[Card{Value: 2, Suit: s}] = Card{
-				Value:       2,
-				Suit:        s,
-				GameValue:   51,
-				IsTrumpSuit: true,
-			}
+			cardValues[Card{Value: 1, Suit: s}] = 50
+			cardValues[Card{Value: 2, Suit: s}] = 51
 		} else {
 			currentValue := suitNum * 12
 			if s == g.TrumpSuit {
@@ -89,13 +101,7 @@ func (g *Game) GetCardUpdates() map[Card]Card {
 				} else {
 					currentValue++
 				}
-				cardValues[Card{Value: i, Suit: s}] = Card{
-					Value:         i,
-					Suit:          s,
-					GameValue:     gameValue,
-					IsTrumpSuit:   s == g.TrumpSuit,
-					IsTrumpNumber: i == g.TrumpNumber,
-				}
+				cardValues[Card{Value: i, Suit: s}] = gameValue
 			}
 		}
 	}
@@ -127,4 +133,12 @@ func (g *Game) GetDeck() Deck {
 	d := Deck{Cards: deck}
 	d.shuffle()
 	return d
+}
+
+func (g *Game) IsFirstRound() bool {
+	return g.round == 0
+}
+
+func (g *Game) EndRound() {
+	g.round++
 }

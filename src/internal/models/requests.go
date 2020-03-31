@@ -26,8 +26,13 @@ type LeaveRoomRequest struct {
 }
 
 type FlipCardsRequest struct {
-	Card     Card
-	NumCards int
+	Card     Card `json:"card"`
+	NumCards int  `json:"numCards"`
+}
+
+type SetKittyRequest struct {
+	Kitty []Card `json:"kitty"`
+	Hand  []Card `json:"hand"`
 }
 
 type UpdateEvent struct {

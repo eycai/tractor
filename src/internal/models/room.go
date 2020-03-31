@@ -23,10 +23,16 @@ func (r *Room) HasUser(user string) bool {
 	return false
 }
 
-func (r *Room) Usernames() []string {
+func (r *Room) DrawOrder() []string {
 	users := make([]string, len(r.Users))
+	banker := r.Game.Turn
+	bankerIndex := 0
 	for i, u := range r.Users {
 		users[i] = u.Username
+		if u.Username == banker {
+			bankerIndex = i
+		}
 	}
+	users = append(users[bankerIndex:], users[0:bankerIndex]...)
 	return users
 }

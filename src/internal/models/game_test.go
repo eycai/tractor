@@ -35,6 +35,57 @@ func testValues(d models.Deck) bool {
 	return true
 }
 
+func TestKittySize(t *testing.T) {
+	type test struct {
+		input    models.Game
+		expected int
+	}
+
+	tests := []test{
+		{
+			input: models.Game{
+				Players: map[string]*models.Player{
+					"a": &models.Player{},
+					"b": &models.Player{},
+					"c": &models.Player{},
+					"d": &models.Player{},
+				},
+			},
+			expected: 8,
+		}, {
+			input: models.Game{
+				Players: map[string]*models.Player{
+					"a": &models.Player{},
+					"b": &models.Player{},
+					"c": &models.Player{},
+					"d": &models.Player{},
+					"e": &models.Player{},
+				},
+			},
+			expected: 8,
+		}, {
+			input: models.Game{
+				Players: map[string]*models.Player{
+					"a": &models.Player{},
+					"b": &models.Player{},
+					"c": &models.Player{},
+					"d": &models.Player{},
+					"e": &models.Player{},
+					"f": &models.Player{},
+				},
+			},
+			expected: 6,
+		},
+	}
+
+	for _, tc := range tests {
+		kitty := tc.input.KittySize()
+		if kitty != tc.expected {
+			t.Errorf("expected kitty of size %d, got %d", tc.expected, kitty)
+		}
+	}
+}
+
 func TestDeck(t *testing.T) {
 	g := models.Game{
 		Players: map[string]*models.Player{

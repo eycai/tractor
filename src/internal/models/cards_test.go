@@ -9,10 +9,12 @@ import (
 
 func TestIsValidPlay(t *testing.T) {
 	type test struct {
-		prev     [][]models.Card
-		next     [][]models.Card
-		hand     []models.Card
-		expected bool
+		prev        [][]models.Card
+		next        [][]models.Card
+		hand        []models.Card
+		trumpSuit   models.Suit
+		trumpNumber int
+		expected    bool
 	}
 
 	tests := []test{
@@ -78,7 +80,9 @@ func TestIsValidPlay(t *testing.T) {
 					Suit:  models.Diamond,
 				},
 			},
-			expected: true,
+			trumpNumber: 10,
+			trumpSuit:   models.Club,
+			expected:    true,
 		}, {
 			prev: [][]models.Card{
 				[]models.Card{
@@ -141,28 +145,27 @@ func TestIsValidPlay(t *testing.T) {
 					Suit:  models.Diamond,
 				},
 			},
-			expected: false,
+			trumpNumber: 10,
+			trumpSuit:   models.Club,
+			expected:    false,
 		}, {
 			prev: [][]models.Card{
 				[]models.Card{
 					{
-						Value:       5,
-						Suit:        models.Diamond,
-						IsTrumpSuit: true,
+						Value: 5,
+						Suit:  models.Diamond,
 					},
 					{
-						Value:       5,
-						Suit:        models.Diamond,
-						IsTrumpSuit: true,
+						Value: 5,
+						Suit:  models.Diamond,
 					},
 				},
 			},
 			next: [][]models.Card{
 				[]models.Card{
 					{
-						Value:         2,
-						Suit:          models.Spade,
-						IsTrumpNumber: true,
+						Value: 2,
+						Suit:  models.Spade,
 					},
 				}, []models.Card{
 					{
@@ -173,9 +176,8 @@ func TestIsValidPlay(t *testing.T) {
 			},
 			hand: []models.Card{
 				{
-					Value:         2,
-					Suit:          models.Spade,
-					IsTrumpNumber: true,
+					Value: 2,
+					Suit:  models.Spade,
 				},
 				{
 					Value: 5,
@@ -186,28 +188,29 @@ func TestIsValidPlay(t *testing.T) {
 					Suit:  models.Spade,
 				},
 			},
-			expected: true,
+			trumpNumber: 2,
+			trumpSuit:   models.Diamond,
+			expected:    true,
 		}, {
+			trumpNumber: 2,
+			trumpSuit:   models.Diamond,
 			prev: [][]models.Card{
 				[]models.Card{
 					{
-						Value:       5,
-						Suit:        models.Diamond,
-						IsTrumpSuit: true,
+						Value: 5,
+						Suit:  models.Diamond,
 					},
 					{
-						Value:       5,
-						Suit:        models.Diamond,
-						IsTrumpSuit: true,
+						Value: 5,
+						Suit:  models.Diamond,
 					},
 				},
 			},
 			next: [][]models.Card{
 				[]models.Card{
 					{
-						Value:         2,
-						Suit:          models.Spade,
-						IsTrumpNumber: true,
+						Value: 2,
+						Suit:  models.Spade,
 					},
 				}, []models.Card{
 					{
@@ -218,14 +221,12 @@ func TestIsValidPlay(t *testing.T) {
 			},
 			hand: []models.Card{
 				{
-					Value:         2,
-					Suit:          models.Spade,
-					IsTrumpNumber: true,
+					Value: 2,
+					Suit:  models.Spade,
 				},
 				{
-					Value:       8,
-					Suit:        models.Diamond,
-					IsTrumpSuit: true,
+					Value: 8,
+					Suit:  models.Diamond,
 				},
 				{
 					Value: 7,
@@ -234,51 +235,46 @@ func TestIsValidPlay(t *testing.T) {
 			},
 			expected: false,
 		}, {
+			trumpNumber: 3,
+			trumpSuit:   models.Diamond,
 			prev: [][]models.Card{
 				[]models.Card{
 					{
-						Value:       5,
-						Suit:        models.Diamond,
-						IsTrumpSuit: true,
+						Value: 5,
+						Suit:  models.Diamond,
 					},
 					{
-						Value:       5,
-						Suit:        models.Diamond,
-						IsTrumpSuit: true,
+						Value: 5,
+						Suit:  models.Diamond,
 					},
 				}, []models.Card{
 					{
-						Value:       7,
-						Suit:        models.Diamond,
-						IsTrumpSuit: true,
+						Value: 7,
+						Suit:  models.Diamond,
 					},
 				},
 			},
 			next: [][]models.Card{
 				[]models.Card{
 					{
-						Value:         3,
-						Suit:          models.Spade,
-						IsTrumpNumber: true,
+						Value: 3,
+						Suit:  models.Spade,
 					},
 				}, []models.Card{
 					{
-						Value:       6,
-						Suit:        models.Diamond,
-						IsTrumpSuit: true,
+						Value: 6,
+						Suit:  models.Diamond,
 					},
 				},
 			},
 			hand: []models.Card{
 				{
-					Value:         3,
-					Suit:          models.Spade,
-					IsTrumpNumber: true,
+					Value: 3,
+					Suit:  models.Spade,
 				},
 				{
-					Value:       6,
-					Suit:        models.Diamond,
-					IsTrumpSuit: true,
+					Value: 6,
+					Suit:  models.Diamond,
 				},
 				{
 					Value: 7,
@@ -290,6 +286,21 @@ func TestIsValidPlay(t *testing.T) {
 	}
 
 	for _, tc := range tests {
+		for j, tr := range tc.prev {
+			for k, c := range tr {
+				tc.prev[j][k] = c.WithTrump(tc.trumpNumber, tc.trumpSuit)
+			}
+		}
+
+		for j, tr := range tc.next {
+			for k, c := range tr {
+				tc.next[j][k] = c.WithTrump(tc.trumpNumber, tc.trumpSuit)
+			}
+		}
+		for i, c := range tc.hand {
+			tc.hand[i] = c.WithTrump(tc.trumpNumber, tc.trumpSuit)
+		}
+
 		valid := models.IsValidPlay(tc.prev, tc.next, tc.hand)
 		if valid != tc.expected {
 			t.Errorf("expected %v but got %v for tricks %v, %v", tc.expected, valid, tc.prev, tc.next)
@@ -299,9 +310,11 @@ func TestIsValidPlay(t *testing.T) {
 
 func TestNextTrickWins(t *testing.T) {
 	type test struct {
-		prev     []models.Trick
-		next     []models.Trick
-		expected bool
+		prev        []models.Trick
+		next        []models.Trick
+		expected    bool
+		trumpNumber int
+		trumpSuit   models.Suit
 	}
 	tests := []test{
 		{
@@ -312,9 +325,8 @@ func TestNextTrickWins(t *testing.T) {
 					Suit:     models.Diamond,
 					IsTrump:  false,
 					LargestCard: models.Card{
-						Value:     5,
-						GameValue: 3,
-						Suit:      models.Diamond,
+						Value: 5,
+						Suit:  models.Diamond,
 					},
 				},
 			},
@@ -325,13 +337,14 @@ func TestNextTrickWins(t *testing.T) {
 					Suit:     models.Diamond,
 					IsTrump:  false,
 					LargestCard: models.Card{
-						Value:     8,
-						GameValue: 6,
-						Suit:      models.Diamond,
+						Value: 8,
+						Suit:  models.Diamond,
 					},
 				},
 			},
-			expected: true,
+			expected:    true,
+			trumpNumber: 2,
+			trumpSuit:   models.Club,
 		}, {
 			prev: []models.Trick{
 				{
@@ -340,9 +353,8 @@ func TestNextTrickWins(t *testing.T) {
 					Suit:     models.Diamond,
 					IsTrump:  false,
 					LargestCard: models.Card{
-						Value:     5,
-						GameValue: 3,
-						Suit:      models.Diamond,
+						Value: 5,
+						Suit:  models.Diamond,
 					},
 				},
 			},
@@ -353,13 +365,14 @@ func TestNextTrickWins(t *testing.T) {
 					Suit:     models.Spade,
 					IsTrump:  false,
 					LargestCard: models.Card{
-						Value:     8,
-						GameValue: 6,
-						Suit:      models.Spade,
+						Value: 8,
+						Suit:  models.Spade,
 					},
 				},
 			},
-			expected: false,
+			trumpNumber: 10,
+			trumpSuit:   models.Heart,
+			expected:    false,
 		}, {
 			prev: []models.Trick{
 				{
@@ -367,9 +380,8 @@ func TestNextTrickWins(t *testing.T) {
 					NumCards: 2,
 					Suit:     models.Diamond,
 					LargestCard: models.Card{
-						Value:     5,
-						GameValue: 3,
-						Suit:      models.Diamond,
+						Value: 5,
+						Suit:  models.Diamond,
 					},
 				},
 			},
@@ -379,13 +391,14 @@ func TestNextTrickWins(t *testing.T) {
 					NumCards: 2,
 					Suit:     models.Spade,
 					LargestCard: models.Card{
-						Value:     2,
-						GameValue: 12,
-						Suit:      models.Spade,
+						Value: 2,
+						Suit:  models.Spade,
 					},
 				},
 			},
-			expected: false,
+			trumpNumber: 5,
+			trumpSuit:   models.Heart,
+			expected:    false,
 		}, {
 			prev: []models.Trick{
 				{
@@ -395,9 +408,8 @@ func TestNextTrickWins(t *testing.T) {
 					Suit:                  models.Diamond,
 					IsTrump:               false,
 					LargestCard: models.Card{
-						Value:     5,
-						GameValue: 3,
-						Suit:      models.Diamond,
+						Value: 5,
+						Suit:  models.Diamond,
 					},
 				},
 			},
@@ -408,14 +420,14 @@ func TestNextTrickWins(t *testing.T) {
 					Suit:     models.Spade,
 					IsTrump:  true,
 					LargestCard: models.Card{
-						Value:       2,
-						GameValue:   36,
-						Suit:        models.Spade,
-						IsTrumpSuit: true,
+						Value: 2,
+						Suit:  models.Spade,
 					},
 				},
 			},
-			expected: false,
+			trumpNumber: 10,
+			trumpSuit:   models.Spade,
+			expected:    false,
 		}, {
 			prev: []models.Trick{
 				{
@@ -425,9 +437,8 @@ func TestNextTrickWins(t *testing.T) {
 					Suit:                  models.Diamond,
 					IsTrump:               false,
 					LargestCard: models.Card{
-						Value:     5,
-						GameValue: 3,
-						Suit:      models.Diamond,
+						Value: 5,
+						Suit:  models.Diamond,
 					},
 				}, {
 					Pattern:  models.NOfAKind,
@@ -435,9 +446,8 @@ func TestNextTrickWins(t *testing.T) {
 					Suit:     models.Diamond,
 					IsTrump:  false,
 					LargestCard: models.Card{
-						Value:     10,
-						GameValue: 8,
-						Suit:      models.Diamond,
+						Value: 10,
+						Suit:  models.Diamond,
 					},
 				},
 			},
@@ -449,9 +459,8 @@ func TestNextTrickWins(t *testing.T) {
 					Suit:                  models.Diamond,
 					IsTrump:               false,
 					LargestCard: models.Card{
-						Value:     7,
-						GameValue: 5,
-						Suit:      models.Diamond,
+						Value: 7,
+						Suit:  models.Diamond,
 					},
 				}, {
 					Pattern:  models.NOfAKind,
@@ -459,13 +468,14 @@ func TestNextTrickWins(t *testing.T) {
 					Suit:     models.Diamond,
 					IsTrump:  false,
 					LargestCard: models.Card{
-						Value:     2,
-						GameValue: 0,
-						Suit:      models.Diamond,
+						Value: 2,
+						Suit:  models.Diamond,
 					},
 				},
 			},
-			expected: false,
+			trumpNumber: 10,
+			trumpSuit:   models.Heart,
+			expected:    false,
 		}, {
 			prev: []models.Trick{
 				{
@@ -475,9 +485,8 @@ func TestNextTrickWins(t *testing.T) {
 					Suit:                  models.Diamond,
 					IsTrump:               false,
 					LargestCard: models.Card{
-						Value:     10,
-						GameValue: 7,
-						Suit:      models.Diamond,
+						Value: 10,
+						Suit:  models.Diamond,
 					},
 				}, {
 					Pattern:               models.Tractor,
@@ -486,9 +495,8 @@ func TestNextTrickWins(t *testing.T) {
 					Suit:                  models.Diamond,
 					IsTrump:               false,
 					LargestCard: models.Card{
-						Value:     6,
-						GameValue: 3,
-						Suit:      models.Diamond,
+						Value: 6,
+						Suit:  models.Diamond,
 					},
 				}, {
 					Pattern:  models.NOfAKind,
@@ -496,9 +504,8 @@ func TestNextTrickWins(t *testing.T) {
 					Suit:     models.Diamond,
 					IsTrump:  false,
 					LargestCard: models.Card{
-						Value:     1,
-						GameValue: 11,
-						Suit:      models.Diamond,
+						Value: 1,
+						Suit:  models.Diamond,
 					},
 				},
 			},
@@ -510,10 +517,8 @@ func TestNextTrickWins(t *testing.T) {
 					Suit:                  models.Club,
 					IsTrump:               true,
 					LargestCard: models.Card{
-						Value:       7,
-						GameValue:   40,
-						Suit:        models.Club,
-						IsTrumpSuit: true,
+						Value: 7,
+						Suit:  models.Club,
 					},
 				}, {
 					Pattern:               models.Tractor,
@@ -522,10 +527,8 @@ func TestNextTrickWins(t *testing.T) {
 					Suit:                  models.Club,
 					IsTrump:               true,
 					LargestCard: models.Card{
-						Value:       10,
-						GameValue:   43,
-						Suit:        models.Club,
-						IsTrumpSuit: true,
+						Value: 10,
+						Suit:  models.Club,
 					},
 				}, {
 					Pattern:  models.NOfAKind,
@@ -533,17 +536,35 @@ func TestNextTrickWins(t *testing.T) {
 					Suit:     models.Diamond,
 					IsTrump:  true,
 					LargestCard: models.Card{
-						Value:         2,
-						GameValue:     48,
-						Suit:          models.Spade,
-						IsTrumpNumber: true,
+						Value: 2,
+						Suit:  models.Spade,
 					},
 				},
 			},
-			expected: true,
+			trumpNumber: 2,
+			trumpSuit:   models.Club,
+			expected:    true,
 		},
 	}
 	for _, tc := range tests {
+		game := models.Game{
+			TrumpNumber: tc.trumpNumber,
+			TrumpSuit:   tc.trumpSuit,
+		}
+
+		vals := game.GetCardValues()
+		for i, c := range tc.prev {
+			c.LargestCard = c.LargestCard.WithGameValues(vals)
+			c.LargestCard = c.LargestCard.WithTrump(tc.trumpNumber, tc.trumpSuit)
+			tc.prev[i] = c
+		}
+
+		for i, c := range tc.next {
+			c.LargestCard = c.LargestCard.WithGameValues(vals)
+			c.LargestCard = c.LargestCard.WithTrump(tc.trumpNumber, tc.trumpSuit)
+			tc.next[i] = c
+		}
+
 		wins := models.NextTrickWins(tc.prev, tc.next)
 		if wins != tc.expected {
 			t.Errorf("expected %v but got %v for tricks %v, %v", tc.expected, wins, tc.prev, tc.next)
@@ -552,53 +573,51 @@ func TestNextTrickWins(t *testing.T) {
 }
 func TestParse(t *testing.T) {
 	type test struct {
-		input    []models.Card
-		expected models.Trick
-		err      error
+		input       []models.Card
+		expected    models.Trick
+		err         error
+		trumpSuit   models.Suit
+		trumpNumber int
 	}
 	tests := []test{
 		{
 			input: []models.Card{
-				models.Card{
-					Value:     5,
-					Suit:      models.Spade,
-					GameValue: 2,
+				{
+					Value: 5,
+					Suit:  models.Spade,
 				},
 			},
 			expected: models.Trick{
 				Pattern: models.NOfAKind,
 				LargestCard: models.Card{
-					Value:     5,
-					Suit:      models.Spade,
-					GameValue: 2,
+					Value: 5,
+					Suit:  models.Spade,
 				},
 				NumCards: 1,
 				Suit:     models.Spade,
 				IsTrump:  false,
 			},
-			err: nil,
+			err:         nil,
+			trumpSuit:   models.Diamond,
+			trumpNumber: 2,
 		}, {
+			trumpSuit:   models.Diamond,
+			trumpNumber: 2,
 			input: []models.Card{
-				models.Card{
-					Value:       8,
-					Suit:        models.Diamond,
-					IsTrumpSuit: true,
-					GameValue:   41,
+				{
+					Value: 8,
+					Suit:  models.Diamond,
 				},
-				models.Card{
-					Value:       8,
-					Suit:        models.Diamond,
-					IsTrumpSuit: true,
-					GameValue:   41,
+				{
+					Value: 8,
+					Suit:  models.Diamond,
 				},
 			},
 			expected: models.Trick{
 				Pattern: models.NOfAKind,
 				LargestCard: models.Card{
-					Value:       8,
-					Suit:        models.Diamond,
-					IsTrumpSuit: true,
-					GameValue:   41,
+					Value: 8,
+					Suit:  models.Diamond,
 				},
 				NumCards: 2,
 				Suit:     models.Diamond,
@@ -606,27 +625,23 @@ func TestParse(t *testing.T) {
 			},
 			err: nil,
 		}, {
+			trumpSuit:   models.Diamond,
+			trumpNumber: 2,
 			input: []models.Card{
-				models.Card{
-					Value:       8,
-					Suit:        models.Diamond,
-					IsTrumpSuit: true,
-					GameValue:   41,
+				{
+					Value: 8,
+					Suit:  models.Diamond,
 				},
-				models.Card{
-					Value:       8,
-					Suit:        models.Spade,
-					IsTrumpSuit: false,
-					GameValue:   29,
+				{
+					Value: 8,
+					Suit:  models.Spade,
 				},
 			},
 			expected: models.Trick{
 				Pattern: models.NOfAKind,
 				LargestCard: models.Card{
-					Value:       8,
-					Suit:        models.Diamond,
-					IsTrumpSuit: true,
-					GameValue:   41,
+					Value: 8,
+					Suit:  models.Diamond,
 				},
 				NumCards: 2,
 				Suit:     models.Diamond,
@@ -634,27 +649,23 @@ func TestParse(t *testing.T) {
 			},
 			err: fmt.Errorf("only one card is trump"),
 		}, {
+			trumpSuit:   models.Club,
+			trumpNumber: 2,
 			input: []models.Card{
-				models.Card{
-					Value:       8,
-					Suit:        models.Diamond,
-					IsTrumpSuit: false,
-					GameValue:   17,
+				{
+					Value: 8,
+					Suit:  models.Diamond,
 				},
-				models.Card{
-					Value:       8,
-					Suit:        models.Spade,
-					IsTrumpSuit: false,
-					GameValue:   29,
+				{
+					Value: 8,
+					Suit:  models.Spade,
 				},
 			},
 			expected: models.Trick{
 				Pattern: models.NOfAKind,
 				LargestCard: models.Card{
-					Value:       8,
-					Suit:        models.Spade,
-					IsTrumpSuit: false,
-					GameValue:   29,
+					Value: 8,
+					Suit:  models.Spade,
 				},
 				NumCards: 2,
 				Suit:     models.Diamond,
@@ -662,42 +673,31 @@ func TestParse(t *testing.T) {
 			},
 			err: fmt.Errorf("not the same suit"),
 		}, {
+			trumpSuit:   models.Spade,
+			trumpNumber: 5,
 			input: []models.Card{
-				models.Card{
-					Value:       1,
-					Suit:        models.Spade,
-					IsTrumpSuit: true,
-					GameValue:   47,
+				{
+					Value: 1,
+					Suit:  models.Spade,
 				},
-				models.Card{
-					Value:       1,
-					Suit:        models.Spade,
-					IsTrumpSuit: true,
-					GameValue:   47,
+				{
+					Value: 1,
+					Suit:  models.Spade,
 				},
-				models.Card{
-					Value:         5,
-					Suit:          models.Diamond,
-					IsTrumpSuit:   false,
-					IsTrumpNumber: true,
-					GameValue:     48,
+				{
+					Value: 5,
+					Suit:  models.Diamond,
 				},
-				models.Card{
-					Value:         5,
-					Suit:          models.Diamond,
-					IsTrumpSuit:   false,
-					IsTrumpNumber: true,
-					GameValue:     48,
+				{
+					Value: 5,
+					Suit:  models.Diamond,
 				},
 			},
 			expected: models.Trick{
 				Pattern: models.Tractor,
 				LargestCard: models.Card{
-					Value:         5,
-					Suit:          models.Diamond,
-					IsTrumpSuit:   false,
-					IsTrumpNumber: true,
-					GameValue:     48,
+					Value: 5,
+					Suit:  models.Diamond,
 				},
 				NumCards:              4,
 				Suit:                  models.Diamond,
@@ -706,63 +706,47 @@ func TestParse(t *testing.T) {
 			},
 			err: nil,
 		}, {
+			trumpSuit:   models.Club,
+			trumpNumber: 10,
 			input: []models.Card{
-				models.Card{
-					Value:       13,
-					Suit:        models.Diamond,
-					IsTrumpSuit: false,
-					GameValue:   11,
+				{
+					Value: 13,
+					Suit:  models.Diamond,
 				},
-				models.Card{
-					Value:       13,
-					Suit:        models.Diamond,
-					IsTrumpSuit: false,
-					GameValue:   11,
+				{
+					Value: 13,
+					Suit:  models.Diamond,
 				},
-				models.Card{
-					Value:       1,
-					Suit:        models.Diamond,
-					IsTrumpSuit: false,
-					GameValue:   12,
+				{
+					Value: 1,
+					Suit:  models.Diamond,
 				},
-				models.Card{
-					Value:       1,
-					Suit:        models.Diamond,
-					IsTrumpSuit: false,
-					GameValue:   12,
+				{
+					Value: 1,
+					Suit:  models.Diamond,
 				},
-				models.Card{
-					Value:       2,
-					Suit:        models.Diamond,
-					IsTrumpSuit: false,
-					GameValue:   0,
+				{
+					Value: 2,
+					Suit:  models.Diamond,
 				},
-				models.Card{
-					Value:       2,
-					Suit:        models.Diamond,
-					IsTrumpSuit: false,
-					GameValue:   0,
+				{
+					Value: 2,
+					Suit:  models.Diamond,
 				},
-				models.Card{
-					Value:       3,
-					Suit:        models.Diamond,
-					IsTrumpSuit: false,
-					GameValue:   1,
+				{
+					Value: 3,
+					Suit:  models.Diamond,
 				},
-				models.Card{
-					Value:       3,
-					Suit:        models.Diamond,
-					IsTrumpSuit: false,
-					GameValue:   1,
+				{
+					Value: 3,
+					Suit:  models.Diamond,
 				},
 			},
 			expected: models.Trick{
 				Pattern: models.Tractor,
 				LargestCard: models.Card{
-					Value:       3,
-					Suit:        models.Diamond,
-					IsTrumpSuit: false,
-					GameValue:   1,
+					Value: 3,
+					Suit:  models.Diamond,
 				},
 				NumCards:              8,
 				Suit:                  models.Diamond,
@@ -771,45 +755,35 @@ func TestParse(t *testing.T) {
 			},
 			err: nil,
 		}, {
+			trumpSuit:   models.Diamond,
+			trumpNumber: 2,
 			input: []models.Card{
-				models.Card{
-					Value:       1,
-					Suit:        models.Joker,
-					IsTrumpSuit: true,
-					GameValue:   50,
+				{
+					Value: 1,
+					Suit:  models.Joker,
 				},
-				models.Card{
-					Value:       1,
-					Suit:        models.Joker,
-					IsTrumpSuit: true,
-					GameValue:   50,
+				{
+					Value: 1,
+					Suit:  models.Joker,
 				},
-				models.Card{
-					Value:       1,
-					Suit:        models.Joker,
-					IsTrumpSuit: true,
-					GameValue:   50,
+				{
+					Value: 1,
+					Suit:  models.Joker,
 				},
-				models.Card{
-					Value:       2,
-					Suit:        models.Joker,
-					IsTrumpSuit: true,
-					GameValue:   51,
+				{
+					Value: 2,
+					Suit:  models.Joker,
 				},
-				models.Card{
-					Value:       2,
-					Suit:        models.Joker,
-					IsTrumpSuit: true,
-					GameValue:   51,
+				{
+					Value: 2,
+					Suit:  models.Joker,
 				},
 			},
 			expected: models.Trick{
 				Pattern: models.Tractor,
 				LargestCard: models.Card{
-					Value:       2,
-					Suit:        models.Joker,
-					IsTrumpSuit: true,
-					GameValue:   51,
+					Value: 2,
+					Suit:  models.Joker,
 				},
 				NumCards:              5,
 				Suit:                  models.Joker,
@@ -818,75 +792,51 @@ func TestParse(t *testing.T) {
 			},
 			err: fmt.Errorf("tractor incorrect length"),
 		}, {
+			trumpSuit:   models.Club,
+			trumpNumber: 3,
 			input: []models.Card{
-				models.Card{
-					Value:         3,
-					Suit:          models.Diamond,
-					IsTrumpSuit:   false,
-					IsTrumpNumber: true,
-					GameValue:     48,
+				{
+					Value: 3,
+					Suit:  models.Diamond,
 				},
-				models.Card{
-					Value:         3,
-					Suit:          models.Diamond,
-					IsTrumpSuit:   false,
-					IsTrumpNumber: true,
-					GameValue:     48,
+				{
+					Value: 3,
+					Suit:  models.Diamond,
 				},
-				models.Card{
-					Value:         3,
-					Suit:          models.Diamond,
-					IsTrumpSuit:   false,
-					IsTrumpNumber: true,
-					GameValue:     48,
+				{
+					Value: 3,
+					Suit:  models.Diamond,
 				},
-				models.Card{
-					Value:         3,
-					Suit:          models.Club,
-					IsTrumpSuit:   true,
-					IsTrumpNumber: true,
-					GameValue:     49,
+				{
+					Value: 3,
+					Suit:  models.Club,
 				},
-				models.Card{
-					Value:         3,
-					Suit:          models.Club,
-					IsTrumpSuit:   true,
-					IsTrumpNumber: true,
-					GameValue:     49,
+				{
+					Value: 3,
+					Suit:  models.Club,
 				},
-				models.Card{
-					Value:         3,
-					Suit:          models.Club,
-					IsTrumpSuit:   true,
-					IsTrumpNumber: true,
-					GameValue:     49,
+				{
+					Value: 3,
+					Suit:  models.Club,
 				},
-				models.Card{
-					Value:       1,
-					Suit:        models.Joker,
-					IsTrumpSuit: true,
-					GameValue:   50,
+				{
+					Value: 1,
+					Suit:  models.Joker,
 				},
-				models.Card{
-					Value:       1,
-					Suit:        models.Joker,
-					IsTrumpSuit: true,
-					GameValue:   50,
+				{
+					Value: 1,
+					Suit:  models.Joker,
 				},
-				models.Card{
-					Value:       1,
-					Suit:        models.Joker,
-					IsTrumpSuit: true,
-					GameValue:   50,
+				{
+					Value: 1,
+					Suit:  models.Joker,
 				},
 			},
 			expected: models.Trick{
 				Pattern: models.Tractor,
 				LargestCard: models.Card{
-					Value:       1,
-					Suit:        models.Joker,
-					IsTrumpSuit: true,
-					GameValue:   50,
+					Value: 1,
+					Suit:  models.Joker,
 				},
 				NumCards:              9,
 				Suit:                  models.Joker,
@@ -895,34 +845,31 @@ func TestParse(t *testing.T) {
 			},
 			err: nil,
 		}, {
+			trumpSuit:   models.Club,
+			trumpNumber: 5,
 			input: []models.Card{
-				models.Card{
-					Value:     2,
-					Suit:      models.Diamond,
-					GameValue: 0,
+				{
+					Value: 2,
+					Suit:  models.Diamond,
 				},
-				models.Card{
-					Value:     2,
-					Suit:      models.Diamond,
-					GameValue: 0,
+				{
+					Value: 2,
+					Suit:  models.Diamond,
 				},
-				models.Card{
-					Value:     4,
-					Suit:      models.Diamond,
-					GameValue: 2,
+				{
+					Value: 4,
+					Suit:  models.Diamond,
 				},
-				models.Card{
-					Value:     4,
-					Suit:      models.Diamond,
-					GameValue: 2,
+				{
+					Value: 4,
+					Suit:  models.Diamond,
 				},
 			},
 			expected: models.Trick{
 				Pattern: models.Tractor,
 				LargestCard: models.Card{
-					Value:     4,
-					Suit:      models.Diamond,
-					GameValue: 2,
+					Value: 4,
+					Suit:  models.Diamond,
 				},
 				NumCards:              4,
 				Suit:                  models.Diamond,
@@ -930,41 +877,69 @@ func TestParse(t *testing.T) {
 				TractorNumConsecutive: 2,
 			},
 			err: fmt.Errorf("tractor not consecutive"),
-		},
-		{
+		}, {
+			trumpSuit:   models.Club,
+			trumpNumber: 3,
 			input: []models.Card{
-				models.Card{
-					Value:     3,
-					Suit:      models.Diamond,
-					GameValue: 1,
+				{
+					Value: 2,
+					Suit:  models.Diamond,
 				},
-				models.Card{
-					Value:     3,
-					Suit:      models.Diamond,
-					GameValue: 1,
+				{
+					Value: 2,
+					Suit:  models.Diamond,
 				},
-				models.Card{
-					Value:     4,
-					Suit:      models.Diamond,
-					GameValue: 2,
+				{
+					Value: 4,
+					Suit:  models.Diamond,
 				},
-				models.Card{
-					Value:     4,
-					Suit:      models.Diamond,
-					GameValue: 2,
-				},
-				models.Card{
-					Value:     4,
-					Suit:      models.Diamond,
-					GameValue: 2,
+				{
+					Value: 4,
+					Suit:  models.Diamond,
 				},
 			},
 			expected: models.Trick{
 				Pattern: models.Tractor,
 				LargestCard: models.Card{
-					Value:     4,
-					Suit:      models.Diamond,
-					GameValue: 2,
+					Value: 4,
+					Suit:  models.Diamond,
+				},
+				NumCards:              4,
+				Suit:                  models.Diamond,
+				IsTrump:               false,
+				TractorNumConsecutive: 2,
+			},
+			err: nil,
+		}, {
+			trumpSuit:   models.Club,
+			trumpNumber: 5,
+			input: []models.Card{
+				{
+					Value: 3,
+					Suit:  models.Diamond,
+				},
+				{
+					Value: 3,
+					Suit:  models.Diamond,
+				},
+				{
+					Value: 4,
+					Suit:  models.Diamond,
+				},
+				{
+					Value: 4,
+					Suit:  models.Diamond,
+				},
+				{
+					Value: 4,
+					Suit:  models.Diamond,
+				},
+			},
+			expected: models.Trick{
+				Pattern: models.Tractor,
+				LargestCard: models.Card{
+					Value: 4,
+					Suit:  models.Diamond,
 				},
 				NumCards:              4,
 				Suit:                  models.Diamond,
@@ -976,6 +951,20 @@ func TestParse(t *testing.T) {
 	}
 
 	for _, tc := range tests {
+		game := models.Game{
+			TrumpNumber: tc.trumpNumber,
+			TrumpSuit:   tc.trumpSuit,
+		}
+
+		vals := game.GetCardValues()
+		for i, c := range tc.input {
+			tc.input[i] = c.WithGameValues(vals)
+			tc.input[i] = tc.input[i].WithTrump(tc.trumpNumber, tc.trumpSuit)
+		}
+
+		tc.expected.LargestCard = tc.expected.LargestCard.WithGameValues(vals)
+		tc.expected.LargestCard = tc.expected.LargestCard.WithTrump(tc.trumpNumber, tc.trumpSuit)
+
 		tr, err := models.ParseTrick(tc.input)
 		if err == nil && tc.err != nil {
 			t.Errorf("expected error %v but got no error", tc.err)
