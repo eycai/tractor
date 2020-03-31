@@ -7,6 +7,7 @@ import { post } from "../../api/fetch";
 //Props: user, roomid, roomInfo
 
 const Lobby = props => {
+  console.log(props.roomInfo);
   const usersList = props.roomInfo
     ? props.roomInfo.users.map(u => (
         <div className="u-medium-text" key={u.username}>
@@ -24,7 +25,9 @@ const Lobby = props => {
   };
 
   const hostControls =
-    props.roomInfo && props.roomInfo.host == props.user.username ? (
+    props.roomInfo &&
+    props.user &&
+    props.roomInfo.host == props.user.username ? (
       <div className="Lobby-controls-container">
         <div onClick={startGame} className="u-button Lobby-button">
           start

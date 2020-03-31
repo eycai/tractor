@@ -29,6 +29,7 @@ func (s *Server) TestUpdateRoom(w http.ResponseWriter, r *http.Request) {
 	} else {
 		http.Error(w, "no such room", http.StatusBadRequest)
 	}
+	s.broadcastUpdate(room.ID, "force_update")
 	returnSuccess(w)
 }
 

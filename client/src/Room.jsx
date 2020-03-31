@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 import Lobby from "./components/pages/Lobby";
+import Game from "./components/pages/Game";
 import { socket } from "./client-socket";
-import { get } from "./api/fetch";
+import { testData } from "./utilities";
+import { post, get } from "./api/fetch";
 import "./utilities.css";
 
 // Props: user, roomid, socket
@@ -20,6 +22,7 @@ let Room = props => {
         );
       }
     });
+    post("/test_set_room", testData);
     socket.on("update", data => {
       console.log("got an update on this room.");
       console.log(data);
@@ -30,7 +33,11 @@ let Room = props => {
 
   return (
     <div>
-      <Lobby roomInfo={roomInfo} {...props} />
+      {roomInfo && roomInfo.game ? (
+        <Game roomInfo={roomInfo} {...props} />
+      ) : (
+        <Lobby roomInfo={roomInfo} {...props} />
+      )}
     </div>
   );
 };
