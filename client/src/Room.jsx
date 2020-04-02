@@ -32,7 +32,14 @@ let Room = props => {
   }, []);
 
   return (
-    <div>
+    <div
+      style={{
+        backgroundColor: "#F9F9F9",
+        width: "100vw",
+        height: "100vh",
+        zIndex: "-1000"
+      }}
+    >
       {roomInfo && roomInfo.game ? (
         <Game roomInfo={roomInfo} {...props} />
       ) : (

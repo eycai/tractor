@@ -70,12 +70,6 @@ input {
 }
 
 .u-center-anchored {
-  position: relative;
-  transform: translateY(-50%);
-  left: -50%;
-}
-
-.u-y-centered {
-  position: relative;
-  transform: translateY(-50%);
+  position: absolute;
+  transform: translateY(-50%) translateX(-50%);
 }

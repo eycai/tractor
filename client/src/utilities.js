@@ -7,7 +7,7 @@ export const pages = {
 };
 
 export const testData = {
-  id: "UKFY",
+  id: "IYAB",
   users: [
     { username: "alex", connected: true },
     { username: "emily", connected: true },
@@ -24,28 +24,45 @@ export const testData = {
         team: "BOSSES",
         level: 1,
         points: 15,
-        cardsPlayed: [{ value: 10, suit: "CLUBS" }]
+        cardsPlayed: [{ value: 1, suit: "CLUB" }]
       },
       emily: {
         username: "emily",
         team: "PEASANTS",
         level: 1,
         points: 15,
-        cardsPlayed: []
+        cardsPlayed: [
+          { value: 1, suit: "CLUB" },
+          { value: 1, suit: "HEART" },
+          { value: 1, suit: "CLUB" },
+          { value: 1, suit: "HEART" },
+          { value: 1, suit: "CLUB" },
+          { value: 1, suit: "HEART" }
+        ]
       },
       edward: {
         username: "edward",
         team: "PEASANTS",
         level: 1,
         points: 15,
-        cardsPlayed: []
+        cardsPlayed: [
+          { value: 1, suit: "CLUB" },
+          { value: 1, suit: "HEART" },
+          { value: 1, suit: "CLUB" },
+          { value: 1, suit: "HEART" },
+          { value: 1, suit: "CLUB" },
+          { value: 1, suit: "HEART" }
+        ]
       },
       yolanda: {
         username: "yolanda",
         team: "BOSSES",
         level: 1,
         points: 15,
-        cardsPlayed: []
+        cardsPlayed: [
+          { value: 2, suit: "SPADE" },
+          { value: 1, suit: "DIAMOND" }
+        ]
       }
     },
     turn: "emily",

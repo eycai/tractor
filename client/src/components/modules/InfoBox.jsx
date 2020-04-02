@@ -9,14 +9,16 @@ let InfoBox = props => {
 
   return (
     <div className="InfoBox-container">
-      <div className="InfoBox-points-body">
-        <span className="InfoBox-label">Points: </span>
-        <span className="InfoBox-points">{points}</span>
-        <span className="InfoBox-total-points">/80</span>
-      </div>
-      <div>
-        <span className="InfoBox-label">Declared: </span>{" "}
-        {props.roomInfo.game.trumpSuit} {props.roomInfo.game.trumpNumber}
+      <div className="InfoBox-body">
+        <div className="InfoBox-points-body">
+          <span className="InfoBox-label">Points: </span>
+          <span className="InfoBox-points">{points}</span>
+          <span className="InfoBox-total-points">/80</span>
+        </div>
+        <div>
+          <span className="InfoBox-label">Declared: </span>{" "}
+          {props.roomInfo.game.trumpSuit} {props.roomInfo.game.trumpNumber}
+        </div>
       </div>
     </div>
   );

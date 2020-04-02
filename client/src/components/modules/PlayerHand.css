@@ -1,0 +1,28 @@
+.PlayerHand-container {
+  display: flex;
+  flex: 1;
+  padding: 30px;
+  align-items: center;
+  justify-content: center;
+}
+
+.PlayerHand-body {
+  position: relative;
+}
+
+.PlayerHand-card-container {
+  position: absolute;
+  cursor: pointer;
+}
+
+.PlayerHand-card-body {
+  height: inherit;
+}
+
+.PlayerHand-selected {
+  transform: translateY(-30%);
+}
+
+/* .PlayerHand-card-body:hover {
+  transform: scale(1.2);
+} */

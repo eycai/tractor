@@ -2,6 +2,15 @@
   position: absolute;
 }
 
+.Player-body {
+  position: relative;
+  display: flex;
+}
+
+.Player-username-container {
+  position: absolute;
+}
+
 .Player-username {
   font-weight: bold;
   font-size: 24px;
@@ -16,4 +25,17 @@
 
 .Player-team-b {
   color: #4081ff;
+}
+
+.Card-body {
+  height: inherit;
+}
+
+.Card-played-container {
+  position: absolute;
+}
+
+.Card-container {
+  position: absolute;
+  height: inherit;
 }

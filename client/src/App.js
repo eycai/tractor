@@ -8,6 +8,15 @@ import { get, post } from "./api/fetch";
 import { pages } from "./utilities.js";
 import { socket } from "./client-socket";
 
+const testHand = [...Array(40).keys()].map(i => ({ value: 2, suit: "HEART" }));
+
+const testUser = {
+  id: "testid",
+  username: "alex",
+  hand: testHand,
+  kitty: [{ value: 1, suit: "HEART" }]
+};
+
 class App extends Component {
   constructor(props) {
     super(props);
@@ -32,7 +41,7 @@ class App extends Component {
     return (
       <Router>
         <Landing path="/" user={this.state.user} setUser={this.setUser} />
-        <Room path="/:roomid" user={this.state.user} setUser={this.setUser} />
+        <Room path="/:roomid" user={testUser} setUser={this.setUser} />
       </Router>
     );
   }
