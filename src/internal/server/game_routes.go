@@ -62,6 +62,7 @@ func (s *Server) BeginDrawing(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	room.Game.GamePhase = models.Drawing
 	go s.dealCards(users, usernames, deck, room)
 	returnSuccess(w)
 }

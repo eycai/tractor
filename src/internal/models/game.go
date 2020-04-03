@@ -16,6 +16,7 @@ type Game struct {
 type Phase string
 
 const (
+	Start           Phase = "START"
 	Drawing         Phase = "DRAWING"
 	DrawingComplete Phase = "DRAWING_COMPLETE"
 	SetKitty        Phase = "SET_KITTY"

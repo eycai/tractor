@@ -291,7 +291,7 @@ func (s *Server) StartGame(w http.ResponseWriter, r *http.Request) {
 	game := models.Game{
 		Turn:        s.Users[userID].Username,
 		TrumpNumber: 2,
-		GamePhase:   models.Drawing,
+		GamePhase:   models.Start,
 	}
 
 	players := make(map[string]*models.Player, len(s.Rooms[roomID].Users))
