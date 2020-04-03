@@ -45,25 +45,29 @@ const Game = props => {
       </div>
     </div>
   );
+
+  let gameButton = (
+    <div className="Game-play-button" onClick={playCards}>
+      PLAY
+    </div>
+  );
   return (
     <>
       {players}
       <div className="Game-player-dash">
         <InfoBox {...props} />
-        <PlayerHand
-          selectedCards={selectedCards}
-          setSelectedCards={setSelectedCards}
-          {...props}
-        />
+        {props.user.hand ? (
+          <PlayerHand
+            selectedCards={selectedCards}
+            setSelectedCards={setSelectedCards}
+            {...props}
+          />
+        ) : null}
         <Chat />
       </div>
       {centerText}
       {true ? (
-        <div className="Game-play-button-container">
-          <div className="Game-play-button" onClick={playCards}>
-            PLAY
-          </div>
-        </div>
+        <div className="Game-play-button-container">{gameButton}</div>
       ) : null}
     </>
   );

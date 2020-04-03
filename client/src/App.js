@@ -41,7 +41,7 @@ class App extends Component {
     return (
       <Router>
         <Landing path="/" user={this.state.user} setUser={this.setUser} />
-        <Room path="/:roomid" user={testUser} setUser={this.setUser} />
+        <Room path="/:roomid" user={this.state.user} setUser={this.setUser} />
       </Router>
     );
   }
