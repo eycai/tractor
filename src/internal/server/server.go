@@ -49,6 +49,7 @@ func (s *Server) handleRoutes() {
 	s.handleFunc("/api/register", s.RegisterUser)
 	s.handleFunc("/api/connect", s.ConnectUser)
 	s.handleFunc("/api/room_list", s.GetRooms)
+	s.handleFunc("/api/game_state", s.GameState)
 	s.handleFunc("/api/join_room", s.JoinRoom)
 	s.handleFunc("/api/leave_room", s.LeaveRoom)
 	s.handleFunc("/api/create_room", s.CreateRoom)

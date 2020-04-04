@@ -53,6 +53,10 @@ func (s *Server) broadcastUpdate(roomID string, eventName string) {
 }
 
 func (s *Server) emitUpdateToUser(userID string, updateEventName string) {
+	if _, ok := s.Users[userID]; !ok {
+		return
+	}
+
 	update := models.UpdateEvent{
 		User: s.Users[userID],
 		Event: &models.Event{

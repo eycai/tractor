@@ -95,6 +95,11 @@ func lenPlay(cards [][]Card) int {
 	return n
 }
 
+// Matches returns true if the two cards are the same
+func (c *Card) Matches(card Card) bool {
+	return c.Value == card.Value && c.Suit == card.Suit
+}
+
 // GetPoints returns the number of points in a hand.
 func GetPoints(hand [][]Card) int {
 	points := 0
@@ -127,6 +132,37 @@ func IsValidPlay(prev [][]Card, next [][]Card, hand []Card) bool {
 	}
 
 	return true
+}
+
+func getCardsOfSuit(suit Suit, hand []Card) []Card {
+	cards := []Card{}
+	for _, c := range hand {
+		if c.Suit == suit {
+			cards = append(cards, c)
+		}
+	}
+	sort.Sort(ByValue(cards))
+	return cards
+}
+
+func BeatsLead(cards [][]Card, hand []Card) (bool, error) {
+	for _, t := range cards {
+		trick, err := ParseTrick(t)
+		if err != nil {
+			return false, err
+		}
+		suitCards := getCardsOfSuit(trick.Suit, hand)
+		for i := 0; i < len(suitCards)-trick.NumCards+1; i++ {
+			c, err := ParseTrick(suitCards[i : i+trick.NumCards])
+			if err != nil {
+				continue
+			}
+			if typesMatch(c, trick) && c.LargestCard.GameValue() > trick.LargestCard.GameValue() {
+				return true, nil
+			}
+		}
+	}
+	return false, nil
 }
 
 // ParseTrick parses a list of cards into a trick.
@@ -178,7 +214,7 @@ func IsConsecutive(a Card, b Card) bool {
 }
 
 // GetTricks parses tricks out of a play.
-func GetTricks(cards [][]Card, trumpSuit Suit, trumpNumber int) ([]Trick, error) {
+func GetTricks(cards [][]Card) ([]Trick, error) {
 	tricks := make([]Trick, len(cards))
 	for i, t := range cards {
 		trick, err := ParseTrick(t)
@@ -203,6 +239,23 @@ func trickSuitsMatch(t []Trick) bool {
 		}
 	}
 	return true
+}
+
+func SmallestPlay(cards [][]Card) ([][]Card, error) {
+	tricks, err := GetTricks(cards)
+	if err != nil {
+		return [][]Card{}, err
+	}
+
+	trickMap := make(map[Trick]int)
+	for i, t := range tricks {
+		trickMap[t] = i
+	}
+
+	sort.Sort(ByType(tricks))
+	return [][]Card{
+		cards[trickMap[tricks[0]]],
+	}, nil
 }
 
 func typesMatch(a Trick, b Trick) bool {
@@ -239,7 +292,7 @@ func NextTrickWins(prev []Trick, next []Trick) bool {
 	// in all cases, check that pattern maps, and that game value is larger.
 
 	for i, t := range prev {
-		if !typesMatch(t, next[i]) || t.LargestCard.gameValue > next[i].LargestCard.gameValue {
+		if !typesMatch(t, next[i]) || t.LargestCard.gameValue >= next[i].LargestCard.gameValue {
 			return false
 		}
 	}
@@ -256,6 +309,9 @@ func (v ByValue) Swap(i, j int)      { v[i], v[j] = v[j], v[i] }
 // ByType allows for sorting tricks by type.
 // Our desired sort patterns are:
 // By pattern, then by length, then by sublength, then by game value.
+// NOfAKind smaller than tractor,
+// shorter length is smaller,
+// shorter sublength is smaller
 type ByType []Trick
 
 func (v ByType) Len() int { return len(v) }

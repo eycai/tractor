@@ -11,6 +11,9 @@ type Game struct {
 	TrumpNumCardsFlipped int                `json:"trumpNumCardsFlipped"`
 	round                int
 	kitty                []Card
+	firstInTrick         string
+	currentWinner        string
+	winningTrick         []Trick
 }
 
 type Phase string
@@ -23,6 +26,17 @@ const (
 	Playing         Phase = "PLAYING"
 	EndRound        Phase = "END_ROUND"
 )
+
+type TrickStatus string
+
+const (
+	PlayingTrick TrickStatus = "PLAYING_TRICK"
+	TrickEnded   TrickStatus = "TRICK_ENDED"
+)
+
+func (g *Game) SetTrickStarter(user string) {
+	g.firstInTrick = user
+}
 
 func (g *Game) KittySize() int {
 	numPlayers := len(g.Players)
@@ -42,6 +56,95 @@ func (g *Game) GetKitty() []Card {
 	k := g.kitty
 	g.kitty = []Card{}
 	return k
+}
+
+func (g *Game) SetBanker(user string) {
+	g.Banker = user
+	g.firstInTrick = user
+}
+
+func (g *Game) IsValidPlay(cards [][]Card, hand []Card) bool {
+	firstPlay := g.Players[g.firstInTrick].CardsPlayed
+	tricks, err := GetTricks(cards)
+	if err != nil {
+		return false
+	}
+
+	if len(firstPlay) == 0 {
+		if len(cards) == 1 {
+			return true
+		}
+
+		for _, t := range tricks {
+			if t.IsTrump {
+				return false
+			}
+		}
+		return true
+	}
+
+	return IsValidPlay(firstPlay, cards, hand)
+}
+
+func (g *Game) TrickEnded() bool {
+	for _, p := range g.Players {
+		if len(p.CardsPlayed) == 0 {
+			return true
+		}
+	}
+	return false
+}
+
+func (g *Game) DistributePoints() {
+	points := 0
+	for _, p := range g.Players {
+		points += GetPoints(p.CardsPlayed)
+	}
+	g.Players[g.currentWinner].Points += points
+}
+
+func (g *Game) EndTrick() {
+	g.DistributePoints()
+	g.Turn = g.currentWinner
+	g.firstInTrick = g.currentWinner
+	g.currentWinner = ""
+	g.winningTrick = []Trick{}
+	for _, p := range g.Players {
+		p.ResetCards()
+	}
+}
+
+func (g *Game) PlayCards(user string, cards [][]Card, otherHands [][]Card) (TrickStatus, error) {
+	trick, err := GetTricks(cards)
+	if err != nil {
+		return PlayingTrick, err
+	}
+
+	if user == g.firstInTrick || NextTrickWins(g.winningTrick, trick) {
+		g.currentWinner = user
+		g.winningTrick = trick
+	}
+
+	if user == g.firstInTrick && len(cards) > 1 {
+		for _, h := range otherHands {
+			invalid, err := BeatsLead(cards, h)
+			if err != nil {
+				return PlayingTrick, err
+			}
+
+			if invalid {
+				cards, err = SmallestPlay(cards)
+				if err != nil {
+					return PlayingTrick, err
+				}
+			}
+		}
+	}
+	g.Players[user].CardsPlayed = cards
+	if !g.TrickEnded() {
+		return PlayingTrick, nil
+	}
+	return TrickEnded, nil
 }
 
 func (g *Game) FlipCard(c Card, numCards int, user string) bool {
@@ -140,6 +243,59 @@ func (g *Game) IsFirstRound() bool {
 	return g.round == 0
 }
 
-func (g *Game) EndRound() {
+func (g *Game) EndRound(playOrder []string) {
 	g.round++
+	peasantLevels := g.PeasantLevels()
+	winningTeam := Bosses
+	if peasantLevels >= 0 {
+		winningTeam = Peasants
+	}
+
+	// set levels
+	for _, p := range g.Players {
+		p.Points = 0
+		if winningTeam == Peasants {
+			if p.Team == Peasants {
+				p.Level += peasantLevels
+			}
+		} else {
+			if p.Team == Bosses {
+				p.Level -= peasantLevels
+			}
+		}
+	}
+
+	// switch teams
+	if winningTeam == Peasants {
+		for _, p := range g.Players {
+			p.SwitchTeam()
+		}
+	}
+
+	// set banker
+	bankerInd := 0
+	for i := range playOrder {
+		if playOrder[i] == g.Banker {
+			bankerInd = i
+		}
+	}
+
+	for i := 1; i <= len(playOrder); i++ {
+		ind := (i + bankerInd) % len(playOrder)
+		if g.Players[playOrder[ind]].Team == Bosses {
+			g.Banker = playOrder[ind]
+		}
+	}
+}
+
+func (g *Game) PeasantLevels() int {
+	peasantPoints := 0
+	for _, p := range g.Players {
+		if p.Team == Peasants {
+			peasantPoints += p.Points
+		}
+	}
+	numDecks := len(g.Players) / 2
+	pointsPerLevel := numDecks * 20
+	return (peasantPoints / pointsPerLevel) - 2
 }

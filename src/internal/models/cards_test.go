@@ -362,6 +362,34 @@ func TestNextTrickWins(t *testing.T) {
 				{
 					Pattern:  models.NOfAKind,
 					NumCards: 1,
+					Suit:     models.Diamond,
+					IsTrump:  false,
+					LargestCard: models.Card{
+						Value: 5,
+						Suit:  models.Diamond,
+					},
+				},
+			},
+			expected:    false,
+			trumpNumber: 2,
+			trumpSuit:   models.Club,
+		}, {
+			prev: []models.Trick{
+				{
+					Pattern:  models.NOfAKind,
+					NumCards: 1,
+					Suit:     models.Diamond,
+					IsTrump:  false,
+					LargestCard: models.Card{
+						Value: 5,
+						Suit:  models.Diamond,
+					},
+				},
+			},
+			next: []models.Trick{
+				{
+					Pattern:  models.NOfAKind,
+					NumCards: 1,
 					Suit:     models.Spade,
 					IsTrump:  false,
 					LargestCard: models.Card{

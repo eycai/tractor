@@ -19,3 +19,21 @@ func (u *User) Reset() {
 func (u *User) DealCard(c Card) {
 	u.Hand = append(u.Hand, c)
 }
+
+func (u *User) PlayCards(cards [][]Card) {
+	for _, t := range cards {
+		for _, c := range t {
+			u.removeCardFromHand(c)
+		}
+	}
+}
+
+func (u *User) removeCardFromHand(card Card) {
+	for i, c := range u.Hand {
+		if c.Matches(card) {
+			// remove first match
+			u.Hand = append(u.Hand[0:i], u.Hand[i+1:]...)
+			return
+		}
+	}
+}

@@ -35,6 +35,15 @@ type SetKittyRequest struct {
 	Hand  []Card `json:"hand"`
 }
 
+type PlayCardsRequest struct {
+	Cards [][]Card `json:"cards"`
+}
+
+type GameStateResponse struct {
+	Room *Room `json:"room"`
+	User *User `json:"user"`
+}
+
 type UpdateEvent struct {
 	Room  *Room  `json:"room"`
 	User  *User  `json:"user"`

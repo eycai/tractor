@@ -109,7 +109,7 @@ func (s *Server) FlipCards(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if room.Game.IsFirstRound() {
-		room.Game.Banker = s.Users[userID].Username
+		room.Game.SetBanker(s.Users[userID].Username)
 	}
 	s.broadcastUpdate(room.ID, "trump_chosen")
 	returnSuccess(w)
@@ -132,6 +132,10 @@ func (s *Server) GetKitty(w http.ResponseWriter, r *http.Request) {
 	if username != room.Game.Banker {
 		http.Error(w, "user is not banker", http.StatusConflict)
 		return
+	}
+
+	if room.Game.GamePhase != models.DrawingComplete {
+		http.Error(w, "cannot get kitty in current phase", http.StatusConflict)
 	}
 
 	room.Game.GamePhase = models.SetKitty
@@ -177,6 +181,7 @@ func (s *Server) SetKitty(w http.ResponseWriter, r *http.Request) {
 
 	room, err := s.getRoom(userID)
 	if err != nil {
+		http.Error(w, "room does not exist", http.StatusConflict)
 		return
 	}
 
@@ -184,6 +189,11 @@ func (s *Server) SetKitty(w http.ResponseWriter, r *http.Request) {
 	username := user.Username
 	if username != room.Game.Banker {
 		http.Error(w, "user is not banker", http.StatusConflict)
+		return
+	}
+
+	if len(user.Kitty) != room.Game.KittySize() {
+		http.Error(w, "kitty is incorrect length", http.StatusConflict)
 		return
 	}
 
@@ -200,5 +210,61 @@ func (s *Server) SetKitty(w http.ResponseWriter, r *http.Request) {
 	}
 	user.Hand = hand
 	s.broadcastUpdate(room.ID, "round_started")
+	returnSuccess(w)
+}
+
+func (s *Server) PlayCards(w http.ResponseWriter, r *http.Request) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	req := models.PlayCardsRequest{}
+	userID, err := s.processPostRequest(w, r, &req)
+	if err != nil {
+		return
+	}
+
+	room, err := s.getRoom(userID)
+	if err != nil {
+		http.Error(w, "room does not exist", http.StatusConflict)
+		return
+	}
+
+	if !room.Game.IsValidPlay(req.Cards, s.Users[userID].Hand) {
+		http.Error(w, "play invalid", http.StatusConflict)
+		return
+	}
+
+	users, err := s.usernamesToUsers(room.DrawOrder())
+	if err != nil {
+		http.Error(w, "invalid users", http.StatusConflict)
+	}
+	hands := [][]models.Card{}
+	for _, u := range users {
+		hands = append(hands, u.Hand)
+	}
+	status, err := room.Game.PlayCards(s.Users[userID].Username, req.Cards, hands)
+	if err != nil {
+		http.Error(w, "invalid play", http.StatusConflict)
+	}
+
+	// play cards from hand
+	s.Users[userID].PlayCards(req.Cards)
+	if status == models.PlayingTrick {
+		// set next turn
+		nextUserIndex := (indexOf(room.Users, s.Users[userID].Username) + 1) % len(room.Users)
+		room.Game.Turn = room.Users[nextUserIndex].Username
+		s.broadcastUpdate(room.ID, "cards_played")
+		return
+	}
+
+	room.Game.EndTrick()
+	if len(s.Users[userID].Hand) == 0 {
+		// round ended
+		room.Game.EndRound(room.DrawOrder())
+		s.broadcastUpdate(room.ID, "round_ended")
+	} else {
+		room.Game.EndTrick()
+		s.broadcastUpdate(room.ID, "trick_ended")
+	}
 	returnSuccess(w)
 }
