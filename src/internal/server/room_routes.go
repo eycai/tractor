@@ -9,6 +9,28 @@ import (
 	"github.com/eycai/tractor/src/internal/models"
 )
 
+func (s *Server) GameState(w http.ResponseWriter, r *http.Request) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	userID := s.getUserID(w, r)
+	if userID == "" {
+		return
+	}
+
+	state := models.GameStateResponse{}
+	state.User = s.Users[userID]
+	if room, ok := s.Rooms[s.Users[userID].RoomID]; ok {
+		state.Room = room
+	}
+
+	resp, err := json.Marshal(state)
+	if err != nil {
+		http.Error(w, "error marshalling rooms", http.StatusInternalServerError)
+	}
+
+	w.Write(resp)
+}
+
 func (s *Server) TestUpdateRoom(w http.ResponseWriter, r *http.Request) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -64,8 +86,10 @@ func (s *Server) Heartbeat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.Heartbeats[userID].LastHeartbeat = time.Now()
-	s.Heartbeats[userID].Disconnected = false
+	if h, ok := s.Heartbeats[userID]; ok {
+		h.LastHeartbeat = time.Now()
+		h.Disconnected = false
+	}
 }
 
 func (s *Server) JoinRoom(w http.ResponseWriter, r *http.Request) {
@@ -291,7 +315,7 @@ func (s *Server) StartGame(w http.ResponseWriter, r *http.Request) {
 	game := models.Game{
 		Turn:        s.Users[userID].Username,
 		TrumpNumber: 2,
-		GamePhase:   models.Drawing,
+		GamePhase:   models.Start,
 	}
 
 	players := make(map[string]*models.Player, len(s.Rooms[roomID].Users))

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"sort"
 
 	"github.com/eycai/tractor/src/internal/models"
 )
@@ -18,7 +19,8 @@ func (s *Server) getRoom(userID string) (*models.Room, error) {
 func (s *Server) usernamesToUsers(usernames []string) (map[string]*models.User, error) {
 	users := make(map[string]*models.User)
 	for _, u := range usernames {
-		if user, ok := s.Users[u]; ok {
+		userID := s.UserIDs[u]
+		if user, ok := s.Users[userID]; ok {
 			users[u] = user
 		} else {
 			return users, fmt.Errorf("Invalid username")
@@ -69,6 +71,7 @@ func (s *Server) BeginDrawing(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) dealCards(users map[string]*models.User, dealOrder []string, deck models.Deck, room *models.Room) {
 	dealUser := 0
+	log.Printf("users map: %v", users)
 	for i := 0; i < len(deck.Cards)-room.Game.KittySize(); i++ {
 		s.mu.Lock()
 		users[dealOrder[dealUser]].DealCard(deck.Cards[i])
@@ -111,6 +114,9 @@ func (s *Server) FlipCards(w http.ResponseWriter, r *http.Request) {
 	if room.Game.IsFirstRound() {
 		room.Game.SetBanker(s.Users[userID].Username)
 	}
+
+	log.Printf("banker: %s", room.Game.Banker)
+	log.Printf("trump: %d %s", room.Game.TrumpNumber, room.Game.TrumpSuit)
 	s.broadcastUpdate(room.ID, "trump_chosen")
 	returnSuccess(w)
 }
@@ -154,11 +160,13 @@ func (s *Server) GetKitty(w http.ResponseWriter, r *http.Request) {
 			hand[i] = c.WithGameValues(vals)
 			hand[i] = hand[i].WithTrump(room.Game.TrumpNumber, room.Game.TrumpSuit)
 		}
+		sort.Sort(models.ByValue(hand))
 		u.Hand = hand
 	}
 
 	kitty := room.Game.GetKitty()
 
+	log.Printf("kitty: %v", kitty)
 	for i, c := range kitty {
 		kitty[i] = c.WithGameValues(vals)
 		kitty[i] = kitty[i].WithTrump(room.Game.TrumpNumber, room.Game.TrumpSuit)

@@ -1,5 +1,7 @@
 package models
 
+import "log"
+
 type Room struct {
 	ID       string        `json:"id"`
 	Name     string        `json:"name"`
@@ -34,5 +36,6 @@ func (r *Room) DrawOrder() []string {
 		}
 	}
 	users = append(users[bankerIndex:], users[0:bankerIndex]...)
+	log.Printf("users: %v", users)
 	return users
 }
