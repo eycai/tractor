@@ -38,6 +38,9 @@ let Landing = props => {
             props.setUser(whoamires.payload);
           }
         });
+        setErrorMessage(null);
+      } else if (res.status === 409) {
+        setErrorMessage("Usename already taken! Try another.");
       } else {
         console.error(
           `unexpected status code ${res.status} with message ${res.payload}`
@@ -50,7 +53,14 @@ let Landing = props => {
     if (roomcode) {
       post("/join_room", { roomId: roomcode.toUpperCase() }).then(res => {
         if (res.status === 200) {
+          // if (props.updateRoom) {
+          //   console.log("updating room");
+          //   props.updateRoom();
+          // } else {
+          //   props.navigate(roomcode.toUpperCase());
+          // }
           props.navigate(roomcode.toUpperCase());
+          setErrorMessage(null);
         } else if (res.status === 400) {
           setErrorMessage(
             "Invalid room code. Perhaps you meant to create a new room?"
@@ -94,14 +104,6 @@ let Landing = props => {
             setRoomcode(e.target.value);
           }}
         ></input>
-        <div
-          className="Landing-error u-small-text"
-          style={
-            errorMessage ? { visibility: "visible" } : { visibility: "hidden" }
-          }
-        >
-          {errorMessage}
-        </div>
       </>
     ) : null;
 
@@ -112,6 +114,14 @@ let Landing = props => {
         <div className="u-small-text">enter username below</div>
         {usernameInput}
         {roomCodeWidget}
+        <div
+          className="Landing-error u-small-text"
+          style={
+            errorMessage ? { visibility: "visible" } : { visibility: "hidden" }
+          }
+        >
+          {errorMessage}
+        </div>
         <div
           className="u-button Landing-start-button"
           onClick={() => {

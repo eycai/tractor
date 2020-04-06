@@ -4,6 +4,8 @@ import InfoBox from "../modules/InfoBox";
 import PlayerHand from "../modules/PlayerHand";
 import Chat from "../modules/Chat";
 
+import { post } from "../../api/fetch";
+
 import "./Game.css";
 import "../../utilities.css";
 
@@ -23,6 +25,10 @@ const Game = props => {
   const playCards = () => {
     const cards = selectedCards.map(i => props.user.hand[i]);
     console.log(`Playing ${JSON.stringify(cards)}`);
+  };
+
+  const startDrawing = () => {
+    post("/begin_drawing", {});
   };
 
   let players = props.roomInfo.users
@@ -46,11 +52,24 @@ const Game = props => {
     </div>
   );
 
-  let gameButton = (
-    <div className="Game-play-button" onClick={playCards}>
-      PLAY
-    </div>
-  );
+  let gameButton = null;
+
+  switch (props.roomInfo.game.gamePhase) {
+    case "START":
+      gameButton = (
+        <div className="Game-play-button" onClick={startDrawing}>
+          START DRAWING
+        </div>
+      );
+      break;
+    case "PLAYING":
+      gameButton = (
+        <div className="Game-play-button" onClick={playCards}>
+          PLAY
+        </div>
+      );
+      break;
+  }
   return (
     <>
       {players}

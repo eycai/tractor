@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Lobby from "./components/pages/Lobby";
 import Game from "./components/pages/Game";
+import Landing from "./components/pages/Landing";
 import { socket } from "./client-socket";
 import { testData } from "./utilities";
 import { post, get } from "./api/fetch";
@@ -12,7 +13,7 @@ let Room = props => {
   // RoomID
   let [roomInfo, setRoomInfo] = useState(null);
 
-  useEffect(() => {
+  const updateRoom = () => {
     get("/room_info", { roomId: props.roomid }).then(res => {
       if (res.status === 200) {
         setRoomInfo(res.payload);
@@ -22,7 +23,14 @@ let Room = props => {
         );
       }
     });
-    // post("/test_set_room", testData);
+  };
+
+  useEffect(() => {
+    // if (!props.user) {
+    //   props.navigate("/");
+    // }
+    updateRoom();
+    post("/test_set_room", testData);
     socket.on("update", data => {
       console.log("got an update on this room.");
       console.log(data);
@@ -31,6 +39,11 @@ let Room = props => {
     });
   }, []);
 
+  // if (!props.user || !props.user.id) {
+  //   return <Landing {...props} updateRoom={updateRoom} />;
+  // } else {
+  //   console.log("hello");
+  //   console.log(props.user.id);
   return (
     <div
       style={{
@@ -47,6 +60,7 @@ let Room = props => {
       )}
     </div>
   );
+  // }
 };
 
 export default Room;

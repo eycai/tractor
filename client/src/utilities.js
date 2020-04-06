@@ -7,7 +7,7 @@ export const pages = {
 };
 
 export const testData = {
-  id: "JJFK",
+  id: "HSVY",
   users: [
     { username: "alex", connected: true },
     { username: "emily", connected: true },
@@ -24,7 +24,7 @@ export const testData = {
         team: "BOSSES",
         level: 1,
         points: 15,
-        cardsPlayed: [{ value: 1, suit: "CLUB" }]
+        cardsPlayed: [[{ value: 1, suit: "CLUB" }]]
       },
       emily: {
         username: "emily",
@@ -32,12 +32,14 @@ export const testData = {
         level: 1,
         points: 15,
         cardsPlayed: [
-          { value: 1, suit: "CLUB" },
-          { value: 1, suit: "HEART" },
-          { value: 1, suit: "CLUB" },
-          { value: 1, suit: "HEART" },
-          { value: 1, suit: "CLUB" },
-          { value: 1, suit: "HEART" }
+          [
+            { value: 1, suit: "CLUB" },
+            { value: 1, suit: "HEART" },
+            { value: 1, suit: "CLUB" },
+            { value: 1, suit: "HEART" },
+            { value: 1, suit: "CLUB" },
+            { value: 1, suit: "HEART" }
+          ]
         ]
       },
       edward: {
@@ -46,12 +48,10 @@ export const testData = {
         level: 1,
         points: 15,
         cardsPlayed: [
-          { value: 1, suit: "CLUB" },
-          { value: 1, suit: "HEART" },
-          { value: 1, suit: "CLUB" },
-          { value: 1, suit: "HEART" },
-          { value: 1, suit: "CLUB" },
-          { value: 1, suit: "HEART" }
+          [
+            { value: 2, suit: "CLUB" },
+            { value: 1, suit: "CLUB" }
+          ]
         ]
       },
       yolanda: {
@@ -60,8 +60,10 @@ export const testData = {
         level: 1,
         points: 15,
         cardsPlayed: [
-          { value: 2, suit: "SPADE" },
-          { value: 1, suit: "DIAMOND" }
+          [
+            { value: 2, suit: "SPADE" },
+            { value: 1, suit: "DIAMOND" }
+          ]
         ]
       }
     },

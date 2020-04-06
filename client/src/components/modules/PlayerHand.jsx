@@ -5,12 +5,12 @@ import Card from "./Card";
 import { cardHeight, cardWidth, offset } from "./Player";
 
 let PlayerHand = props => {
-  const initialOffset = (offset * (props.hand.length - 1) + cardWidth) / 2;
+  const initialOffset = (offset * (props.user.hand.length - 1) + cardWidth) / 2;
 
   return (
     <div className="PlayerHand-container">
       <div className="PlayerHand-body">
-        {props.hand.map((c, i) => (
+        {props.user.hand.map((c, i) => (
           <div
             style={{
               height: cardHeight,
