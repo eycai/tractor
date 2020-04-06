@@ -682,3 +682,647 @@ func TestIsValidPlayForGame(t *testing.T) {
 		}
 	}
 }
+
+func TestPlayCards(t *testing.T) {
+	type plays struct {
+		user   string
+		play   [][]models.Card
+		status models.TrickStatus
+	}
+	type test struct {
+		plays          []plays
+		hands          map[string][]models.Card
+		game           *models.Game
+		firstInTrick   string
+		drawOrder      []string
+		expectedWinner string
+		expectedPlays  []plays
+		expectedStatus models.TrickStatus
+		expectedPoints map[string]int
+		expectedTurn   string
+	}
+
+	tests := []test{
+		{
+			plays: []plays{
+				{
+					play: [][]models.Card{
+						{
+							{Value: 5, Suit: models.Spade},
+						},
+					},
+					user: "a",
+				},
+			},
+			hands: map[string][]models.Card{
+				"a": {
+					{Value: 5, Suit: models.Spade},
+				},
+				"b": {
+					{Value: 7, Suit: models.Spade},
+				},
+				"c": {
+					{Value: 8, Suit: models.Spade},
+				},
+				"d": {
+					{Value: 10, Suit: models.Spade},
+				},
+			},
+			game: &models.Game{
+				Players: map[string]*models.Player{
+					"a": {},
+					"b": {},
+					"c": {},
+					"d": {},
+				},
+				Turn:        "a",
+				TrumpSuit:   models.Diamond,
+				TrumpNumber: 2,
+			},
+			firstInTrick:   "a",
+			drawOrder:      []string{"b", "c", "d", "a"},
+			expectedWinner: "a",
+			expectedPlays: []plays{
+				{
+					play: [][]models.Card{
+						{
+							{Value: 5, Suit: models.Spade},
+						},
+					},
+					user:   "a",
+					status: models.PlayingTrick,
+				},
+			},
+			expectedPoints: map[string]int{"a": 0, "b": 0, "c": 0, "d": 0},
+			expectedTurn:   "b",
+		},
+		{
+			plays: []plays{
+				{
+					play: [][]models.Card{
+						{
+							{Value: 5, Suit: models.Spade},
+							{Value: 5, Suit: models.Spade},
+						},
+						{
+							{Value: 1, Suit: models.Spade},
+						},
+					},
+					user: "a",
+				},
+			},
+			hands: map[string][]models.Card{
+				"a": {
+					{Value: 5, Suit: models.Spade},
+					{Value: 5, Suit: models.Spade},
+					{Value: 1, Suit: models.Spade},
+					{Value: 1, Suit: models.Spade},
+				},
+				"b": {
+					{Value: 7, Suit: models.Spade},
+					{Value: 7, Suit: models.Spade},
+				},
+				"c": {
+					{Value: 8, Suit: models.Spade},
+					{Value: 6, Suit: models.Spade},
+				},
+				"d": {
+					{Value: 10, Suit: models.Spade},
+					{Value: 4, Suit: models.Spade},
+				},
+			},
+			game: &models.Game{
+				Players: map[string]*models.Player{
+					"a": {},
+					"b": {},
+					"c": {},
+					"d": {},
+				},
+				Turn:        "a",
+				TrumpSuit:   models.Diamond,
+				TrumpNumber: 2,
+			},
+			firstInTrick:   "a",
+			drawOrder:      []string{"b", "c", "d", "a"},
+			expectedWinner: "a",
+			expectedPlays: []plays{
+				{
+					play: [][]models.Card{
+						{
+							{Value: 5, Suit: models.Spade},
+							{Value: 5, Suit: models.Spade},
+						},
+					},
+					user:   "a",
+					status: models.PlayingTrick,
+				},
+			},
+			expectedPoints: map[string]int{"a": 0, "b": 0, "c": 0, "d": 0},
+			expectedTurn:   "b",
+		},
+		{
+			plays: []plays{
+				{
+					play: [][]models.Card{
+						{
+							{Value: 5, Suit: models.Spade},
+							{Value: 5, Suit: models.Spade},
+						},
+						{
+							{Value: 1, Suit: models.Spade},
+						},
+					},
+					user: "a",
+				},
+				{
+					play: [][]models.Card{
+						{
+							{Value: 7, Suit: models.Spade},
+							{Value: 7, Suit: models.Spade},
+						},
+					},
+					user: "b",
+				},
+			},
+			hands: map[string][]models.Card{
+				"a": {
+					{Value: 5, Suit: models.Spade},
+					{Value: 5, Suit: models.Spade},
+					{Value: 1, Suit: models.Spade},
+					{Value: 1, Suit: models.Spade},
+				},
+				"b": {
+					{Value: 7, Suit: models.Spade},
+					{Value: 7, Suit: models.Spade},
+				},
+				"c": {
+					{Value: 8, Suit: models.Spade},
+					{Value: 6, Suit: models.Spade},
+				},
+				"d": {
+					{Value: 10, Suit: models.Spade},
+					{Value: 4, Suit: models.Spade},
+				},
+			},
+			game: &models.Game{
+				Players: map[string]*models.Player{
+					"a": {},
+					"b": {},
+					"c": {},
+					"d": {},
+				},
+				Turn:        "a",
+				TrumpSuit:   models.Diamond,
+				TrumpNumber: 2,
+			},
+			firstInTrick:   "a",
+			drawOrder:      []string{"b", "c", "d", "a"},
+			expectedWinner: "b",
+			expectedPlays: []plays{
+				{
+					play: [][]models.Card{
+						{
+							{Value: 5, Suit: models.Spade},
+							{Value: 5, Suit: models.Spade},
+						},
+					},
+					user:   "a",
+					status: models.PlayingTrick,
+				},
+				{
+					play: [][]models.Card{
+						{
+							{Value: 7, Suit: models.Spade},
+							{Value: 7, Suit: models.Spade},
+						},
+					},
+					user:   "b",
+					status: models.PlayingTrick,
+				},
+			},
+			expectedPoints: map[string]int{"a": 0, "b": 0, "c": 0, "d": 0},
+			expectedTurn:   "c",
+		}, {
+			plays: []plays{
+				{
+					play: [][]models.Card{
+						{
+							{Value: 1, Suit: models.Spade},
+						},
+					},
+					user: "a",
+				},
+				{
+					play: [][]models.Card{
+						{
+							{Value: 7, Suit: models.Spade},
+						},
+					},
+					user: "b",
+				},
+			},
+			hands: map[string][]models.Card{
+				"a": {
+					{Value: 5, Suit: models.Spade},
+					{Value: 5, Suit: models.Spade},
+					{Value: 1, Suit: models.Spade},
+					{Value: 1, Suit: models.Spade},
+				},
+				"b": {
+					{Value: 7, Suit: models.Spade},
+					{Value: 7, Suit: models.Spade},
+				},
+				"c": {
+					{Value: 8, Suit: models.Spade},
+					{Value: 6, Suit: models.Spade},
+				},
+				"d": {
+					{Value: 10, Suit: models.Spade},
+					{Value: 4, Suit: models.Spade},
+				},
+			},
+			game: &models.Game{
+				Players: map[string]*models.Player{
+					"a": {},
+					"b": {},
+					"c": {},
+					"d": {},
+				},
+				Turn:        "a",
+				TrumpSuit:   models.Diamond,
+				TrumpNumber: 2,
+			},
+			firstInTrick:   "a",
+			drawOrder:      []string{"b", "c", "d", "a"},
+			expectedWinner: "a",
+			expectedPlays: []plays{
+				{
+					play: [][]models.Card{
+						{
+							{Value: 1, Suit: models.Spade},
+						},
+					},
+					user:   "a",
+					status: models.PlayingTrick,
+				},
+				{
+					play: [][]models.Card{
+						{
+							{Value: 7, Suit: models.Spade},
+						},
+					},
+					user:   "b",
+					status: models.PlayingTrick,
+				},
+			},
+			expectedPoints: map[string]int{"a": 0, "b": 0, "c": 0, "d": 0},
+			expectedTurn:   "c",
+		}, {
+			plays: []plays{
+				{
+					play: [][]models.Card{
+						{
+							{Value: 5, Suit: models.Spade},
+						},
+					},
+					user: "a",
+				},
+				{
+					play: [][]models.Card{
+						{
+							{Value: 7, Suit: models.Diamond},
+						},
+					},
+					user: "b",
+				},
+				{
+					play: [][]models.Card{
+						{
+							{Value: 8, Suit: models.Spade},
+						},
+					},
+					user: "c",
+				},
+			},
+			hands: map[string][]models.Card{
+				"a": {
+					{Value: 5, Suit: models.Spade},
+					{Value: 5, Suit: models.Spade},
+					{Value: 1, Suit: models.Spade},
+					{Value: 1, Suit: models.Spade},
+				},
+				"b": {
+					{Value: 7, Suit: models.Diamond},
+					{Value: 7, Suit: models.Diamond},
+				},
+				"c": {
+					{Value: 8, Suit: models.Spade},
+					{Value: 6, Suit: models.Spade},
+				},
+				"d": {
+					{Value: 10, Suit: models.Spade},
+					{Value: 4, Suit: models.Spade},
+				},
+			},
+			game: &models.Game{
+				Players: map[string]*models.Player{
+					"a": {},
+					"b": {},
+					"c": {},
+					"d": {},
+				},
+				Turn:        "a",
+				TrumpSuit:   models.Diamond,
+				TrumpNumber: 2,
+			},
+			firstInTrick:   "a",
+			drawOrder:      []string{"b", "c", "d", "a"},
+			expectedWinner: "b",
+			expectedPlays: []plays{
+				{
+					play: [][]models.Card{
+						{
+							{Value: 5, Suit: models.Spade},
+						},
+					},
+					user:   "a",
+					status: models.PlayingTrick,
+				},
+				{
+					play: [][]models.Card{
+						{
+							{Value: 7, Suit: models.Diamond},
+						},
+					},
+					user:   "b",
+					status: models.PlayingTrick,
+				},
+				{
+					play: [][]models.Card{
+						{
+							{Value: 8, Suit: models.Spade},
+						},
+					},
+					user:   "c",
+					status: models.PlayingTrick,
+				},
+			},
+			expectedPoints: map[string]int{"a": 0, "b": 0, "c": 0, "d": 0},
+			expectedTurn:   "d",
+		},
+		{
+			plays: []plays{
+				{
+					play: [][]models.Card{
+						{
+							{Value: 5, Suit: models.Spade},
+						},
+					},
+					user: "a",
+				},
+				{
+					play: [][]models.Card{
+						{
+							{Value: 7, Suit: models.Diamond},
+						},
+					},
+					user: "b",
+				},
+				{
+					play: [][]models.Card{
+						{
+							{Value: 8, Suit: models.Spade},
+						},
+					},
+					user: "c",
+				},
+				{
+					play: [][]models.Card{
+						{
+							{Value: 10, Suit: models.Diamond},
+						},
+					},
+					user: "d",
+				},
+			},
+			hands: map[string][]models.Card{
+				"a": {
+					{Value: 5, Suit: models.Spade},
+					{Value: 5, Suit: models.Spade},
+					{Value: 1, Suit: models.Spade},
+					{Value: 1, Suit: models.Spade},
+				},
+				"b": {
+					{Value: 7, Suit: models.Diamond},
+					{Value: 7, Suit: models.Diamond},
+				},
+				"c": {
+					{Value: 8, Suit: models.Spade},
+					{Value: 6, Suit: models.Spade},
+				},
+				"d": {
+					{Value: 10, Suit: models.Diamond},
+				},
+			},
+			game: &models.Game{
+				Players: map[string]*models.Player{
+					"a": {},
+					"b": {},
+					"c": {},
+					"d": {},
+				},
+				Turn:        "a",
+				TrumpSuit:   models.Diamond,
+				TrumpNumber: 2,
+			},
+			firstInTrick:   "a",
+			drawOrder:      []string{"b", "c", "d", "a"},
+			expectedWinner: "",
+			expectedPlays: []plays{
+				{
+					play: [][]models.Card{
+						{
+							{Value: 5, Suit: models.Spade},
+						},
+					},
+					user:   "a",
+					status: models.PlayingTrick,
+				},
+				{
+					play: [][]models.Card{
+						{
+							{Value: 7, Suit: models.Diamond},
+						},
+					},
+					user:   "b",
+					status: models.PlayingTrick,
+				},
+				{
+					play: [][]models.Card{
+						{
+							{Value: 8, Suit: models.Spade},
+						},
+					},
+					user:   "c",
+					status: models.PlayingTrick,
+				},
+				{
+					play: [][]models.Card{
+						{
+							{Value: 10, Suit: models.Diamond},
+						},
+					},
+					user:   "d",
+					status: models.TrickEnded,
+				},
+			},
+			expectedPoints: map[string]int{"a": 0, "b": 0, "c": 0, "d": 15},
+			expectedTurn:   "d",
+		}, {
+			plays: []plays{
+				{
+					play: [][]models.Card{
+						{
+							{Value: 5, Suit: models.Spade},
+						},
+					},
+					user: "a",
+				},
+				{
+					play: [][]models.Card{
+						{
+							{Value: 7, Suit: models.Diamond},
+						},
+					},
+					user: "b",
+				},
+				{
+					play: [][]models.Card{
+						{
+							{Value: 8, Suit: models.Spade},
+						},
+					},
+					user: "c",
+				},
+				{
+					play: [][]models.Card{
+						{
+							{Value: 10, Suit: models.Spade},
+						},
+					},
+					user: "d",
+				},
+			},
+			hands: map[string][]models.Card{
+				"a": {
+					{Value: 5, Suit: models.Spade},
+					{Value: 5, Suit: models.Spade},
+					{Value: 1, Suit: models.Spade},
+					{Value: 1, Suit: models.Spade},
+				},
+				"b": {
+					{Value: 7, Suit: models.Diamond},
+					{Value: 7, Suit: models.Diamond},
+				},
+				"c": {
+					{Value: 8, Suit: models.Spade},
+					{Value: 6, Suit: models.Spade},
+				},
+				"d": {
+					{Value: 10, Suit: models.Spade},
+				},
+			},
+			game: &models.Game{
+				Players: map[string]*models.Player{
+					"a": {},
+					"b": {},
+					"c": {},
+					"d": {},
+				},
+				Turn:        "a",
+				TrumpSuit:   models.Diamond,
+				TrumpNumber: 2,
+			},
+			firstInTrick:   "a",
+			drawOrder:      []string{"b", "c", "d", "a"},
+			expectedWinner: "",
+			expectedPlays: []plays{
+				{
+					play: [][]models.Card{
+						{
+							{Value: 5, Suit: models.Spade},
+						},
+					},
+					user:   "a",
+					status: models.PlayingTrick,
+				},
+				{
+					play: [][]models.Card{
+						{
+							{Value: 7, Suit: models.Diamond},
+						},
+					},
+					user:   "b",
+					status: models.PlayingTrick,
+				},
+				{
+					play: [][]models.Card{
+						{
+							{Value: 8, Suit: models.Spade},
+						},
+					},
+					user:   "c",
+					status: models.PlayingTrick,
+				},
+				{
+					play: [][]models.Card{
+						{
+							{Value: 10, Suit: models.Spade},
+						},
+					},
+					user:   "d",
+					status: models.TrickEnded,
+				},
+			},
+			expectedPoints: map[string]int{"a": 0, "b": 15, "c": 0, "d": 0},
+			expectedTurn:   "b",
+		},
+	}
+
+	for _, tc := range tests {
+		tc.game.SetDrawOrder(tc.drawOrder)
+		tc.game.SetTrickStarter(tc.firstInTrick)
+		for i, play := range tc.plays {
+			otherHands := [][]models.Card{}
+			for u, h := range tc.hands {
+				if u != play.user {
+					otherHands = append(otherHands, tc.game.GetUpdatedCards(h))
+				}
+			}
+			status, played, err := tc.game.PlayCards(play.user, play.play, otherHands)
+			if err != nil {
+				t.Errorf("expected no error, but got error")
+			}
+			if status != tc.expectedPlays[i].status {
+				t.Errorf("should have gotten status %v, instead got %v", tc.expectedPlays[i].status, status)
+			}
+			if !playsEqual(played, tc.expectedPlays[i].play) {
+				t.Errorf("expcted to return play %v, but got %v", tc.expectedPlays[i].play, played)
+			}
+		}
+
+		if tc.expectedWinner != tc.game.GetCurrentWinner() {
+			t.Errorf("expected winner %s but got %s", tc.expectedWinner, tc.game.GetCurrentWinner())
+		}
+
+		for u, p := range tc.expectedPoints {
+			if tc.game.Players[u].Points != p {
+				t.Errorf("expected %d points for %s but got %d", p, u, tc.game.Players[u].Points)
+			}
+		}
+
+		if tc.game.Turn != tc.expectedTurn {
+			t.Errorf("expected turn to be %s, instead got %s", tc.expectedTurn, tc.game.Turn)
+		}
+	}
+}

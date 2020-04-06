@@ -1,6 +1,10 @@
 package models
 
-import "sort"
+import (
+	"fmt"
+	"math"
+	"sort"
+)
 
 // Game a game of tractor
 type Game struct {
@@ -18,6 +22,7 @@ type Game struct {
 	currentWinner        string
 	winningTrick         []Trick
 	cardValues           map[Card]int
+	drawOrder            []string
 }
 
 // Phase the phase of the game
@@ -133,6 +138,7 @@ func (g *Game) IsValidPlayForGame(cards [][]Card, hand []Card) bool {
 		return false
 	}
 
+	// is the first play
 	if len(firstPlay) == 0 {
 		if len(cards) == 1 {
 			return true
@@ -150,45 +156,52 @@ func (g *Game) IsValidPlayForGame(cards [][]Card, hand []Card) bool {
 		return true
 	}
 
+	// is not the first play
 	return IsValidPlay(firstPlay, cards, hand)
 }
 
-func (g *Game) PlayCards(user string, cards [][]Card, otherHands [][]Card) (TrickStatus, error) {
+// PlayCards allows the user to play cards in a trick.
+// assumes that the plays are valid.
+func (g *Game) PlayCards(user string, cards [][]Card, otherHands [][]Card) (TrickStatus, [][]Card, error) {
+	if user != g.Turn {
+		return PlayingTrick, cards, fmt.Errorf("incorrect user")
+	}
 	cards = g.GetUpdatedPlays(cards)
-	trick, err := GetTricks(cards)
-	if err != nil {
-		return PlayingTrick, err
+
+	if user == g.firstInTrick && len(cards) > 1 {
+		// check if invalid lead, and force to play the smallest trick.
+		for _, h := range otherHands {
+			invalid, smallest, err := BeatsLead(cards, h)
+			if err != nil {
+				return PlayingTrick, cards, err
+			}
+			if invalid {
+				cards = smallest
+			}
+		}
 	}
 
+	trick, err := GetTricks(cards)
+	if err != nil {
+		return PlayingTrick, cards, err
+	}
+	// set current winner
 	if user == g.firstInTrick || NextTrickWins(g.winningTrick, trick) {
 		g.currentWinner = user
 		g.winningTrick = trick
 	}
 
-	if user == g.firstInTrick && len(cards) > 1 {
-		for _, h := range otherHands {
-			invalid, err := BeatsLead(cards, h)
-			if err != nil {
-				return PlayingTrick, err
-			}
-
-			if invalid {
-				cards, err = SmallestPlay(cards)
-				if err != nil {
-					return PlayingTrick, err
-				}
-			}
-		}
-	}
 	g.Players[user].CardsPlayed = cards
 	if !g.trickEnded() {
-		return PlayingTrick, nil
+		g.setNextTurn()
+		return PlayingTrick, cards, nil
 	}
 	g.endTrick()
-	return TrickEnded, nil
+	return TrickEnded, cards, nil
 }
 
-func (g *Game) EndRound(playOrder []string) {
+// EndRound ends a round and resets the game for the next round.
+func (g *Game) EndRound() {
 	g.round++
 	peasantLevels := g.peasantLevels()
 	winningTeam := Bosses
@@ -219,18 +232,25 @@ func (g *Game) EndRound(playOrder []string) {
 
 	// set banker
 	bankerInd := 0
-	for i := range playOrder {
-		if playOrder[i] == g.Banker {
+	for i := range g.drawOrder {
+		if g.drawOrder[i] == g.Banker {
 			bankerInd = i
 		}
 	}
 
-	for i := 1; i <= len(playOrder); i++ {
-		ind := (i + bankerInd) % len(playOrder)
-		if g.Players[playOrder[ind]].Team == Bosses {
-			g.Banker = playOrder[ind]
+	for i := 1; i <= len(g.drawOrder); i++ {
+		ind := (i + bankerInd) % len(g.drawOrder)
+		if g.Players[g.drawOrder[ind]].Team == Bosses {
+			g.setBanker(g.drawOrder[ind])
 		}
 	}
+
+	// reset game
+	g.GamePhase = EndRound
+	g.TrumpNumCardsFlipped = 0
+	g.TrumpFlipUser = ""
+	g.cardValues = make(map[Card]int)
+	g.kitty = make([]Card, 0)
 }
 
 // GetCardValues gets a map from plain card to card with trump updates after trump is set.
@@ -297,6 +317,35 @@ func (g *Game) GetDeck() Deck {
 	return d
 }
 
+// SetTrickStarter sets the person to start the trick
+func (g *Game) SetTrickStarter(user string) {
+	g.firstInTrick = user
+}
+
+// SetDrawOrder sets the drawing order
+func (g *Game) SetDrawOrder(order []string) {
+	g.drawOrder = order
+	for i, u := range order {
+		g.Players[u].setOrder(i)
+	}
+}
+
+// GetCurrentWinner gets the user currently winning the round
+func (g *Game) GetCurrentWinner() string {
+	return g.currentWinner
+}
+
+func (g *Game) setNextTurn() {
+	current := g.Players[g.Turn].drawOrder
+	next := (current + 1) % len(g.Players)
+	g.Turn = g.drawOrder[next]
+}
+
+func (g *Game) setBanker(user string) {
+	g.Banker = user
+	g.firstInTrick = user
+}
+
 func (g *Game) isFirstRound() bool {
 	return g.round == 0
 }
@@ -310,40 +359,45 @@ func (g *Game) distributePoints() {
 	g.Players[g.currentWinner].Points += points
 }
 
-// SetTrickStarter sets the person to start the trick
-func (g *Game) SetTrickStarter(user string) {
-	g.firstInTrick = user
-}
-
-func (g *Game) setBanker(user string) {
-	g.Banker = user
-	g.firstInTrick = user
-}
-
 func (g *Game) endTrick() {
 	g.distributePoints()
 	g.Turn = g.currentWinner
 	g.firstInTrick = g.currentWinner
-	g.currentWinner = ""
-	g.winningTrick = []Trick{}
 }
 
 func (g *Game) trickEnded() bool {
 	for _, p := range g.Players {
 		if len(p.CardsPlayed) == 0 {
-			return true
+			return false
 		}
 	}
-	return false
+	return true
 }
 
-func (g *Game) peasantLevels() int {
+func (g *Game) EndState() (int, int, []Card) {
 	peasantPoints := 0
 	for _, p := range g.Players {
 		if p.Team == Peasants {
 			peasantPoints += p.Points
 		}
 	}
+
+	kittyPoints := 0
+	if g.Players[g.currentWinner].Team == Peasants {
+		mult := 0
+		for _, t := range g.winningTrick {
+			mult += int(math.Exp2(float64(t.NumCards)))
+		}
+		kittyPoints := GetPoints([][]Card{g.kitty})
+		kittyPoints = kittyPoints * mult
+	}
+
+	return peasantPoints, kittyPoints, g.kitty
+}
+
+func (g *Game) peasantLevels() int {
+	peasantPoints, kittyPoints, _ := g.EndState()
+	peasantPoints += kittyPoints
 	numDecks := len(g.Players) / 2
 	pointsPerLevel := numDecks * 20
 	return (peasantPoints / pointsPerLevel) - 2

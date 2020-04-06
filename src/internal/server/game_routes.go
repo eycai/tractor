@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/eycai/tractor/src/internal/models"
 )
@@ -78,6 +79,7 @@ func (s *Server) dealCards(users map[string]*models.User, dealOrder []string, de
 		s.emitUpdateToUser(users[dealOrder[dealUser]].ID, "card_drawn")
 		log.Printf("draw card %s, %v", dealOrder[dealUser], deck.Cards[i])
 		dealUser = (dealUser + 1) % len(dealOrder)
+		time.Sleep(time.Second)
 	}
 	s.mu.Lock()
 	room.Game.GamePhase = models.DrawingComplete
@@ -224,17 +226,21 @@ func (s *Server) PlayCards(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, "invalid users", http.StatusConflict)
 	}
+
 	hands := [][]models.Card{}
 	for _, u := range users {
-		hands = append(hands, u.Hand)
+		if u.ID != userID {
+			hands = append(hands, u.Hand)
+		}
 	}
-	status, err := room.Game.PlayCards(s.Users[userID].Username, req.Cards, hands)
+
+	status, played, err := room.Game.PlayCards(s.Users[userID].Username, req.Cards, hands)
 	if err != nil {
 		http.Error(w, "invalid play", http.StatusConflict)
 	}
 
 	// play cards from hand
-	s.Users[userID].PlayCards(req.Cards)
+	s.Users[userID].PlayCards(played)
 	if status == models.PlayingTrick {
 		// set next turn
 		nextUserIndex := (indexOf(room.Users, s.Users[userID].Username) + 1) % len(room.Users)
@@ -245,8 +251,13 @@ func (s *Server) PlayCards(w http.ResponseWriter, r *http.Request) {
 
 	if len(s.Users[userID].Hand) == 0 {
 		// round ended
-		room.Game.EndRound(room.DrawOrder())
-		s.broadcastUpdate(room.ID, "round_ended")
+		peasantPoints, kittyPoints, kitty := room.Game.EndState()
+		event := models.EndRoundEvent{
+			Kitty:       kitty,
+			KittyPoints: kittyPoints,
+			TotalPoints: peasantPoints + kittyPoints,
+		}
+		s.broadcastEvent(room.ID, "round_ended", event)
 	} else {
 		s.broadcastUpdate(room.ID, "trick_ended")
 	}

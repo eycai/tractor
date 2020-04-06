@@ -2,6 +2,7 @@ package models_test
 
 import (
 	"fmt"
+	"sort"
 	"testing"
 
 	"github.com/eycai/tractor/src/internal/models"
@@ -1099,10 +1100,11 @@ func TestParse(t *testing.T) {
 
 func TestBeatsLead(t *testing.T) {
 	type test struct {
-		game    *models.Game
-		lead    [][]models.Card
-		hand    []models.Card
-		success bool
+		game             *models.Game
+		lead             [][]models.Card
+		hand             []models.Card
+		expectedSmallest [][]models.Card
+		success          bool
 	}
 
 	tests := []test{
@@ -1118,7 +1120,14 @@ func TestBeatsLead(t *testing.T) {
 						Suit:  models.Club,
 					},
 				},
+				{
+					{
+						Value: 13,
+						Suit:  models.Club,
+					},
+				},
 			},
+			expectedSmallest: [][]models.Card{},
 			hand: []models.Card{
 				{
 					Value: 3,
@@ -1138,7 +1147,14 @@ func TestBeatsLead(t *testing.T) {
 						Suit:  models.Club,
 					},
 				},
+				{
+					{
+						Value: 13,
+						Suit:  models.Club,
+					},
+				},
 			},
+			expectedSmallest: [][]models.Card{},
 			hand: []models.Card{
 				{
 					Value: 2,
@@ -1154,11 +1170,33 @@ func TestBeatsLead(t *testing.T) {
 			lead: [][]models.Card{
 				{
 					{
-						Value: 4,
+						Value: 8,
 						Suit:  models.Club,
 					},
 					{
-						Value: 4,
+						Value: 8,
+						Suit:  models.Club,
+					},
+				},
+				{
+					{
+						Value: 3,
+						Suit:  models.Club,
+					},
+					{
+						Value: 3,
+						Suit:  models.Club,
+					},
+				},
+			},
+			expectedSmallest: [][]models.Card{
+				{
+					{
+						Value: 3,
+						Suit:  models.Club,
+					},
+					{
+						Value: 3,
 						Suit:  models.Club,
 					},
 				},
@@ -1195,6 +1233,7 @@ func TestBeatsLead(t *testing.T) {
 					},
 				},
 			},
+			expectedSmallest: [][]models.Card{},
 			hand: []models.Card{
 				{
 					Value: 3,
@@ -1244,6 +1283,18 @@ func TestBeatsLead(t *testing.T) {
 					},
 				},
 			},
+			expectedSmallest: [][]models.Card{
+				{
+					{
+						Value: 4,
+						Suit:  models.Club,
+					},
+					{
+						Value: 4,
+						Suit:  models.Club,
+					},
+				},
+			},
 			hand: []models.Card{
 				{
 					Value: 7,
@@ -1267,10 +1318,30 @@ func TestBeatsLead(t *testing.T) {
 			lead: [][]models.Card{
 				{
 					{
-						Value: 4,
+						Value: 10,
 						Suit:  models.Club,
 					},
 				}, {
+					{
+						Value: 5,
+						Suit:  models.Club,
+					},
+					{
+						Value: 5,
+						Suit:  models.Club,
+					},
+					{
+						Value: 6,
+						Suit:  models.Club,
+					},
+					{
+						Value: 6,
+						Suit:  models.Club,
+					},
+				},
+			},
+			expectedSmallest: [][]models.Card{
+				{
 					{
 						Value: 5,
 						Suit:  models.Club,
@@ -1320,7 +1391,7 @@ func TestBeatsLead(t *testing.T) {
 			lead: [][]models.Card{
 				{
 					{
-						Value: 4,
+						Value: 10,
 						Suit:  models.Club,
 					},
 				}, {
@@ -1342,6 +1413,7 @@ func TestBeatsLead(t *testing.T) {
 					},
 				},
 			},
+			expectedSmallest: [][]models.Card{},
 			hand: []models.Card{
 				{
 					Value: 7,
@@ -1402,19 +1474,27 @@ func TestBeatsLead(t *testing.T) {
 				},
 				{
 					Value: 7,
-					Suit:  models.Spade,
-				},
-				{
-					Value: 8,
-					Suit:  models.Spade,
-				},
-				{
-					Value: 8,
-					Suit:  models.Spade,
-				},
-				{
-					Value: 3,
 					Suit:  models.Club,
+				},
+				{
+					Value: 8,
+					Suit:  models.Club,
+				},
+				{
+					Value: 8,
+					Suit:  models.Club,
+				},
+				{
+					Value: 5,
+					Suit:  models.Club,
+				},
+			},
+			expectedSmallest: [][]models.Card{
+				{
+					{
+						Value: 4,
+						Suit:  models.Club,
+					},
 				},
 			},
 			success: true,
@@ -1452,6 +1532,22 @@ func TestBeatsLead(t *testing.T) {
 					},
 					{
 						Value: 6,
+						Suit:  models.Club,
+					},
+				},
+			},
+			expectedSmallest: [][]models.Card{
+				{
+					{
+						Value: 4,
+						Suit:  models.Club,
+					},
+					{
+						Value: 4,
+						Suit:  models.Club,
+					},
+					{
+						Value: 4,
 						Suit:  models.Club,
 					},
 				},
@@ -1517,6 +1613,7 @@ func TestBeatsLead(t *testing.T) {
 					},
 				},
 			},
+			expectedSmallest: [][]models.Card{},
 			hand: []models.Card{
 				{
 					Value: 3,
@@ -1546,11 +1643,15 @@ func TestBeatsLead(t *testing.T) {
 	for _, tc := range tests {
 		tc.lead = tc.game.GetUpdatedPlays(tc.lead)
 		tc.hand = tc.game.GetUpdatedCards(tc.hand)
-		success, err := models.BeatsLead(tc.lead, tc.hand)
+		success, smallest, err := models.BeatsLead(tc.lead, tc.hand)
 		if err != nil {
 			t.Errorf("invalid play %v", tc.lead)
-		} else if success != tc.success {
+		}
+		if success != tc.success {
 			t.Errorf("expected %v and %v to produce %v, instead got %v", tc.lead, tc.hand, tc.success, success)
+		}
+		if !playsEqual(smallest, tc.expectedSmallest) {
+			t.Errorf("expected %v to be smallest, instead got %v", tc.expectedSmallest, smallest)
 		}
 	}
 }
@@ -1568,166 +1669,15 @@ func playsEqual(a, b [][]models.Card) bool {
 }
 
 func cardListsEqual(a, b []models.Card) bool {
+	sort.Sort(models.ByValue(a))
+	sort.Sort(models.ByValue(b))
 	if len(a) != len(b) {
 		return false
 	}
 	for i, v := range a {
-		if v != b[i] {
+		if !v.Matches(b[i]) {
 			return false
 		}
 	}
 	return true
-}
-func TestSmallestPlay(t *testing.T) {
-	type test struct {
-		cards    [][]models.Card
-		game     *models.Game
-		smallest [][]models.Card
-	}
-
-	tests := []test{
-		{
-			game: &models.Game{
-				TrumpNumber: 2,
-				TrumpSuit:   models.Spade,
-			},
-			cards: [][]models.Card{
-				{
-					{
-						Value: 4,
-						Suit:  models.Club,
-					},
-					{
-						Value: 4,
-						Suit:  models.Club,
-					},
-					{
-						Value: 4,
-						Suit:  models.Club,
-					},
-				}, {
-					{
-						Value: 5,
-						Suit:  models.Club,
-					},
-					{
-						Value: 5,
-						Suit:  models.Club,
-					},
-					{
-						Value: 6,
-						Suit:  models.Club,
-					},
-					{
-						Value: 6,
-						Suit:  models.Club,
-					},
-				},
-			},
-			smallest: [][]models.Card{
-				{
-					{
-						Value: 4,
-						Suit:  models.Club,
-					},
-					{
-						Value: 4,
-						Suit:  models.Club,
-					},
-					{
-						Value: 4,
-						Suit:  models.Club,
-					},
-				},
-			},
-		}, {
-			game: &models.Game{
-				TrumpNumber: 2,
-				TrumpSuit:   models.Spade,
-			},
-			cards: [][]models.Card{
-				{
-					{
-						Value: 5,
-						Suit:  models.Club,
-					},
-				}, {
-					{
-						Value: 6,
-						Suit:  models.Club,
-					},
-				}, {
-					{
-						Value: 4,
-						Suit:  models.Club,
-					},
-				},
-			},
-			smallest: [][]models.Card{
-				{
-					{
-						Value: 4,
-						Suit:  models.Club,
-					},
-				},
-			},
-		}, {
-			game: &models.Game{
-				TrumpNumber: 2,
-				TrumpSuit:   models.Spade,
-			},
-			cards: [][]models.Card{
-				{
-					{
-						Value: 5,
-						Suit:  models.Club,
-					},
-					{
-						Value: 5,
-						Suit:  models.Club,
-					},
-					{
-						Value: 6,
-						Suit:  models.Club,
-					},
-					{
-						Value: 6,
-						Suit:  models.Club,
-					},
-				}, {
-					{
-						Value: 1,
-						Suit:  models.Club,
-					},
-				}, {
-					{
-						Value: 3,
-						Suit:  models.Club,
-					}, {
-						Value: 3,
-						Suit:  models.Club,
-					},
-				},
-			},
-			smallest: [][]models.Card{
-				{
-					{
-						Value: 1,
-						Suit:  models.Club,
-					},
-				},
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		tc.cards = tc.game.GetUpdatedPlays(tc.cards)
-		tc.smallest = tc.game.GetUpdatedPlays(tc.smallest)
-		s, err := models.SmallestPlay(tc.cards)
-		if err != nil {
-			t.Error(err)
-		} else if !playsEqual(s, tc.smallest) {
-			t.Errorf("expected %v to be smallest for %v, instead got %v", tc.smallest, tc.cards, s)
-		}
-	}
 }

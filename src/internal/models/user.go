@@ -1,5 +1,6 @@
 package models
 
+// User a user in the tractor game
 type User struct {
 	ID       string `json:"id"`
 	Username string `json:"username"`
@@ -9,6 +10,7 @@ type User struct {
 	Kitty    []Card `json:"kitty"`
 }
 
+// Reset resets the user completely
 func (u *User) Reset() {
 	u.SocketID = ""
 	u.RoomID = ""
@@ -16,6 +18,7 @@ func (u *User) Reset() {
 	u.Kitty = []Card{}
 }
 
+// DealCard deals card c into the user's hands
 func (u *User) DealCard(c Card) {
 	u.Hand = append(u.Hand, c)
 }

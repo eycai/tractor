@@ -53,6 +53,12 @@ type UpdateEvent struct {
 type EmptyResponse struct {
 }
 
+type EndRoundEvent struct {
+	Kitty       []Card `json:"kitty"`
+	KittyPoints int    `json:"kittyPoints"`
+	TotalPoints int    `json:"totalPoints"`
+}
+
 type Event struct {
 	Name string `json:"name"`
 }

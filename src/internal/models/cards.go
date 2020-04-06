@@ -95,13 +95,20 @@ func IsValidPlay(prev [][]Card, next [][]Card, hand []Card) bool {
 	return true
 }
 
-// BeatsLead checks if a given play can be beaten by a given hand.
-func BeatsLead(cards [][]Card, hand []Card) (bool, error) {
-	for _, t := range cards {
-		trick, err := ParseTrick(t)
-		if err != nil {
-			return false, err
-		}
+// BeatsLead checks if a given play can be beaten by a given hand. It returns true if it can,
+// along with the smallest play that is beaten.
+func BeatsLead(cards [][]Card, hand []Card) (bool, [][]Card, error) {
+	smallest := [][]Card{}
+	tricks, err := GetTricks(cards)
+	if err != nil {
+		return false, smallest, err
+	}
+	tricksMap := make(map[Trick][]Card)
+	for i, t := range tricks {
+		tricksMap[t] = cards[i]
+	}
+	sort.Sort(ByType(tricks))
+	for _, trick := range tricks {
 		suitCards := getCardsOfSuit(trick.Suit, hand)
 		for i := 0; i < len(suitCards)-trick.NumCards+1; i++ {
 			c, err := ParseTrick(suitCards[i : i+trick.NumCards])
@@ -109,29 +116,11 @@ func BeatsLead(cards [][]Card, hand []Card) (bool, error) {
 				continue
 			}
 			if typesMatch(c, trick) && c.LargestCard.GameValue() > trick.LargestCard.GameValue() {
-				return true, nil
+				return true, [][]Card{tricksMap[trick]}, nil
 			}
 		}
 	}
-	return false, nil
-}
-
-// SmallestPlay gives the smallest play in a list of tricks.
-func SmallestPlay(cards [][]Card) ([][]Card, error) {
-	tricks, err := GetTricks(cards)
-	if err != nil {
-		return [][]Card{}, err
-	}
-
-	trickMap := make(map[Trick]int)
-	for i, t := range tricks {
-		trickMap[t] = i
-	}
-
-	sort.Sort(ByType(tricks))
-	return [][]Card{
-		cards[trickMap[tricks[0]]],
-	}, nil
+	return false, smallest, nil
 }
 
 // ParseTrick parses a list of cards into a trick.

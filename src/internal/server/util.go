@@ -52,6 +52,16 @@ func (s *Server) broadcastUpdate(roomID string, eventName string) {
 	}
 }
 
+func (s *Server) broadcastEvent(roomID string, eventName string, event interface{}) {
+	if _, ok := s.Rooms[roomID]; !ok {
+		return
+	}
+
+	for _, user := range s.Rooms[roomID].Users {
+		userID := s.UserIDs[user.Username]
+		s.emitWSToUser(userID, eventName, event)
+	}
+}
 func (s *Server) emitUpdateToUser(userID string, updateEventName string) {
 	if _, ok := s.Users[userID]; !ok {
 		return
