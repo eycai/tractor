@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"sort"
 
 	"github.com/eycai/tractor/src/internal/models"
 )
@@ -111,10 +110,6 @@ func (s *Server) FlipCards(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if room.Game.IsFirstRound() {
-		room.Game.SetBanker(s.Users[userID].Username)
-	}
-
 	log.Printf("banker: %s", room.Game.Banker)
 	log.Printf("trump: %d %s", room.Game.TrumpNumber, room.Game.TrumpSuit)
 	s.broadcastUpdate(room.ID, "trump_chosen")
@@ -153,24 +148,13 @@ func (s *Server) GetKitty(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	vals := room.Game.GetCardValues()
 	for _, u := range users {
-		hand := make([]models.Card, len(u.Hand))
-		for i, c := range u.Hand {
-			hand[i] = c.WithGameValues(vals)
-			hand[i] = hand[i].WithTrump(room.Game.TrumpNumber, room.Game.TrumpSuit)
-		}
-		sort.Sort(models.ByValue(hand))
-		u.Hand = hand
+		u.Hand = room.Game.GetUpdatedCards(u.Hand)
 	}
 
 	kitty := room.Game.GetKitty()
-
+	kitty = room.Game.GetUpdatedCards(kitty)
 	log.Printf("kitty: %v", kitty)
-	for i, c := range kitty {
-		kitty[i] = c.WithGameValues(vals)
-		kitty[i] = kitty[i].WithTrump(room.Game.TrumpNumber, room.Game.TrumpSuit)
-	}
 
 	users[room.Game.Banker].Kitty = kitty
 	s.broadcastUpdate(room.ID, "cards_finalized")
@@ -210,13 +194,7 @@ func (s *Server) SetKitty(w http.ResponseWriter, r *http.Request) {
 	user.Kitty = req.Kitty
 
 	// reassign values after losing them
-	vals := room.Game.GetCardValues()
-	hand := make([]models.Card, len(user.Hand))
-	for i, c := range user.Hand {
-		hand[i] = c.WithGameValues(vals)
-		hand[i] = hand[i].WithTrump(room.Game.TrumpNumber, room.Game.TrumpSuit)
-	}
-	user.Hand = hand
+	user.Hand = room.Game.GetUpdatedCards(req.Hand)
 	s.broadcastUpdate(room.ID, "round_started")
 	returnSuccess(w)
 }
@@ -237,7 +215,7 @@ func (s *Server) PlayCards(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !room.Game.IsValidPlay(req.Cards, s.Users[userID].Hand) {
+	if !room.Game.IsValidPlayForGame(req.Cards, s.Users[userID].Hand) {
 		http.Error(w, "play invalid", http.StatusConflict)
 		return
 	}
@@ -265,13 +243,11 @@ func (s *Server) PlayCards(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	room.Game.EndTrick()
 	if len(s.Users[userID].Hand) == 0 {
 		// round ended
 		room.Game.EndRound(room.DrawOrder())
 		s.broadcastUpdate(room.ID, "round_ended")
 	} else {
-		room.Game.EndTrick()
 		s.broadcastUpdate(room.ID, "trick_ended")
 	}
 	returnSuccess(w)

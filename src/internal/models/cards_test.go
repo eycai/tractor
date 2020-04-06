@@ -7,6 +7,98 @@ import (
 	"github.com/eycai/tractor/src/internal/models"
 )
 
+func TestGetPoints(t *testing.T) {
+	type test struct {
+		cards  [][]models.Card
+		points int
+	}
+
+	tests := []test{
+		{
+			cards: [][]models.Card{
+				{
+					{
+						Value: 1,
+						Suit:  models.Diamond,
+					},
+					{
+						Value: 1,
+						Suit:  models.Diamond,
+					},
+				},
+				{
+					{
+						Value: 5,
+						Suit:  models.Diamond,
+					},
+					{
+						Value: 5,
+						Suit:  models.Diamond,
+					},
+				},
+			},
+			points: 10,
+		}, {
+			cards: [][]models.Card{
+				{
+					{
+						Value: 13,
+						Suit:  models.Diamond,
+					},
+				},
+				{
+					{
+						Value: 10,
+						Suit:  models.Diamond,
+					},
+					{
+						Value: 10,
+						Suit:  models.Diamond,
+					},
+				},
+			},
+			points: 30,
+		}, {
+			cards: [][]models.Card{
+				{
+					{
+						Value: 1,
+						Suit:  models.Diamond,
+					},
+					{
+						Value: 1,
+						Suit:  models.Diamond,
+					},
+				},
+				{
+					{
+						Value: 4,
+						Suit:  models.Diamond,
+					},
+					{
+						Value: 4,
+						Suit:  models.Diamond,
+					},
+					{
+						Value: 5,
+						Suit:  models.Diamond,
+					},
+					{
+						Value: 5,
+						Suit:  models.Diamond,
+					},
+				},
+			},
+			points: 10,
+		},
+	}
+
+	for _, tc := range tests {
+		if models.GetPoints(tc.cards) != tc.points {
+			t.Errorf("expected %d points, got %d", tc.points, models.GetPoints(tc.cards))
+		}
+	}
+}
 func TestIsValidPlay(t *testing.T) {
 	type test struct {
 		prev        [][]models.Card
@@ -1001,6 +1093,641 @@ func TestParse(t *testing.T) {
 		}
 		if tc.err == nil && tr != tc.expected {
 			t.Errorf("incorrect parsing for %v:\nexpected %v,\ngot %v", tc.input, tc.expected, tr)
+		}
+	}
+}
+
+func TestBeatsLead(t *testing.T) {
+	type test struct {
+		game    *models.Game
+		lead    [][]models.Card
+		hand    []models.Card
+		success bool
+	}
+
+	tests := []test{
+		{
+			game: &models.Game{
+				TrumpNumber: 2,
+				TrumpSuit:   models.Spade,
+			},
+			lead: [][]models.Card{
+				{
+					{
+						Value: 1,
+						Suit:  models.Club,
+					},
+				},
+			},
+			hand: []models.Card{
+				{
+					Value: 3,
+					Suit:  models.Club,
+				},
+			},
+			success: false,
+		}, {
+			game: &models.Game{
+				TrumpNumber: 2,
+				TrumpSuit:   models.Spade,
+			},
+			lead: [][]models.Card{
+				{
+					{
+						Value: 1,
+						Suit:  models.Club,
+					},
+				},
+			},
+			hand: []models.Card{
+				{
+					Value: 2,
+					Suit:  models.Club,
+				},
+			},
+			success: false,
+		}, {
+			game: &models.Game{
+				TrumpNumber: 2,
+				TrumpSuit:   models.Spade,
+			},
+			lead: [][]models.Card{
+				{
+					{
+						Value: 4,
+						Suit:  models.Club,
+					},
+					{
+						Value: 4,
+						Suit:  models.Club,
+					},
+				},
+			},
+			hand: []models.Card{
+				{
+					Value: 3,
+					Suit:  models.Club,
+				},
+				{
+					Value: 5,
+					Suit:  models.Club,
+				},
+				{
+					Value: 5,
+					Suit:  models.Club,
+				},
+			},
+			success: true,
+		}, {
+			game: &models.Game{
+				TrumpNumber: 2,
+				TrumpSuit:   models.Spade,
+			},
+			lead: [][]models.Card{
+				{
+					{
+						Value: 4,
+						Suit:  models.Club,
+					},
+					{
+						Value: 4,
+						Suit:  models.Club,
+					},
+				},
+			},
+			hand: []models.Card{
+				{
+					Value: 3,
+					Suit:  models.Club,
+				},
+				{
+					Value: 3,
+					Suit:  models.Club,
+				},
+				{
+					Value: 5,
+					Suit:  models.Club,
+				},
+			},
+			success: false,
+		}, {
+			game: &models.Game{
+				TrumpNumber: 2,
+				TrumpSuit:   models.Spade,
+			},
+			lead: [][]models.Card{
+				{
+					{
+						Value: 4,
+						Suit:  models.Club,
+					},
+					{
+						Value: 4,
+						Suit:  models.Club,
+					},
+				}, {
+					{
+						Value: 5,
+						Suit:  models.Club,
+					},
+					{
+						Value: 5,
+						Suit:  models.Club,
+					},
+					{
+						Value: 6,
+						Suit:  models.Club,
+					},
+					{
+						Value: 6,
+						Suit:  models.Club,
+					},
+				},
+			},
+			hand: []models.Card{
+				{
+					Value: 7,
+					Suit:  models.Club,
+				},
+				{
+					Value: 7,
+					Suit:  models.Club,
+				},
+				{
+					Value: 5,
+					Suit:  models.Club,
+				},
+			},
+			success: true,
+		}, {
+			game: &models.Game{
+				TrumpNumber: 2,
+				TrumpSuit:   models.Spade,
+			},
+			lead: [][]models.Card{
+				{
+					{
+						Value: 4,
+						Suit:  models.Club,
+					},
+				}, {
+					{
+						Value: 5,
+						Suit:  models.Club,
+					},
+					{
+						Value: 5,
+						Suit:  models.Club,
+					},
+					{
+						Value: 6,
+						Suit:  models.Club,
+					},
+					{
+						Value: 6,
+						Suit:  models.Club,
+					},
+				},
+			},
+			hand: []models.Card{
+				{
+					Value: 7,
+					Suit:  models.Club,
+				},
+				{
+					Value: 7,
+					Suit:  models.Club,
+				},
+				{
+					Value: 8,
+					Suit:  models.Club,
+				},
+				{
+					Value: 8,
+					Suit:  models.Club,
+				},
+				{
+					Value: 3,
+					Suit:  models.Club,
+				},
+			},
+			success: true,
+		}, {
+			game: &models.Game{
+				TrumpNumber: 2,
+				TrumpSuit:   models.Spade,
+			},
+			lead: [][]models.Card{
+				{
+					{
+						Value: 4,
+						Suit:  models.Club,
+					},
+				}, {
+					{
+						Value: 5,
+						Suit:  models.Club,
+					},
+					{
+						Value: 5,
+						Suit:  models.Club,
+					},
+					{
+						Value: 6,
+						Suit:  models.Club,
+					},
+					{
+						Value: 6,
+						Suit:  models.Club,
+					},
+				},
+			},
+			hand: []models.Card{
+				{
+					Value: 7,
+					Suit:  models.Spade,
+				},
+				{
+					Value: 7,
+					Suit:  models.Spade,
+				},
+				{
+					Value: 8,
+					Suit:  models.Spade,
+				},
+				{
+					Value: 8,
+					Suit:  models.Spade,
+				},
+				{
+					Value: 3,
+					Suit:  models.Spade,
+				},
+			},
+			success: false,
+		}, {
+			game: &models.Game{
+				TrumpNumber: 2,
+				TrumpSuit:   models.Spade,
+			},
+			lead: [][]models.Card{
+				{
+					{
+						Value: 4,
+						Suit:  models.Club,
+					},
+				}, {
+					{
+						Value: 5,
+						Suit:  models.Club,
+					},
+					{
+						Value: 5,
+						Suit:  models.Club,
+					},
+					{
+						Value: 6,
+						Suit:  models.Club,
+					},
+					{
+						Value: 6,
+						Suit:  models.Club,
+					},
+				},
+			},
+			hand: []models.Card{
+				{
+					Value: 7,
+					Suit:  models.Club,
+				},
+				{
+					Value: 7,
+					Suit:  models.Spade,
+				},
+				{
+					Value: 8,
+					Suit:  models.Spade,
+				},
+				{
+					Value: 8,
+					Suit:  models.Spade,
+				},
+				{
+					Value: 3,
+					Suit:  models.Club,
+				},
+			},
+			success: true,
+		}, {
+			game: &models.Game{
+				TrumpNumber: 2,
+				TrumpSuit:   models.Spade,
+			},
+			lead: [][]models.Card{
+				{
+					{
+						Value: 4,
+						Suit:  models.Club,
+					},
+					{
+						Value: 4,
+						Suit:  models.Club,
+					},
+					{
+						Value: 4,
+						Suit:  models.Club,
+					},
+				}, {
+					{
+						Value: 5,
+						Suit:  models.Club,
+					},
+					{
+						Value: 5,
+						Suit:  models.Club,
+					},
+					{
+						Value: 6,
+						Suit:  models.Club,
+					},
+					{
+						Value: 6,
+						Suit:  models.Club,
+					},
+				},
+			},
+			hand: []models.Card{
+				{
+					Value: 7,
+					Suit:  models.Club,
+				},
+				{
+					Value: 7,
+					Suit:  models.Club,
+				},
+				{
+					Value: 8,
+					Suit:  models.Club,
+				},
+				{
+					Value: 8,
+					Suit:  models.Club,
+				},
+				{
+					Value: 8,
+					Suit:  models.Club,
+				},
+			},
+			success: true,
+		}, {
+			game: &models.Game{
+				TrumpNumber: 2,
+				TrumpSuit:   models.Spade,
+			},
+			lead: [][]models.Card{
+				{
+					{
+						Value: 4,
+						Suit:  models.Club,
+					},
+					{
+						Value: 4,
+						Suit:  models.Club,
+					},
+					{
+						Value: 4,
+						Suit:  models.Club,
+					},
+				}, {
+					{
+						Value: 5,
+						Suit:  models.Club,
+					},
+					{
+						Value: 5,
+						Suit:  models.Club,
+					},
+					{
+						Value: 6,
+						Suit:  models.Club,
+					},
+					{
+						Value: 6,
+						Suit:  models.Club,
+					},
+				},
+			},
+			hand: []models.Card{
+				{
+					Value: 3,
+					Suit:  models.Club,
+				},
+				{
+					Value: 3,
+					Suit:  models.Club,
+				},
+				{
+					Value: 3,
+					Suit:  models.Club,
+				},
+				{
+					Value: 8,
+					Suit:  models.Club,
+				},
+				{
+					Value: 8,
+					Suit:  models.Club,
+				},
+			},
+			success: false,
+		},
+	}
+
+	for _, tc := range tests {
+		tc.lead = tc.game.GetUpdatedPlays(tc.lead)
+		tc.hand = tc.game.GetUpdatedCards(tc.hand)
+		success, err := models.BeatsLead(tc.lead, tc.hand)
+		if err != nil {
+			t.Errorf("invalid play %v", tc.lead)
+		} else if success != tc.success {
+			t.Errorf("expected %v and %v to produce %v, instead got %v", tc.lead, tc.hand, tc.success, success)
+		}
+	}
+}
+
+func playsEqual(a, b [][]models.Card) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i, v := range a {
+		if !cardListsEqual(v, b[i]) {
+			return false
+		}
+	}
+	return true
+}
+
+func cardListsEqual(a, b []models.Card) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i, v := range a {
+		if v != b[i] {
+			return false
+		}
+	}
+	return true
+}
+func TestSmallestPlay(t *testing.T) {
+	type test struct {
+		cards    [][]models.Card
+		game     *models.Game
+		smallest [][]models.Card
+	}
+
+	tests := []test{
+		{
+			game: &models.Game{
+				TrumpNumber: 2,
+				TrumpSuit:   models.Spade,
+			},
+			cards: [][]models.Card{
+				{
+					{
+						Value: 4,
+						Suit:  models.Club,
+					},
+					{
+						Value: 4,
+						Suit:  models.Club,
+					},
+					{
+						Value: 4,
+						Suit:  models.Club,
+					},
+				}, {
+					{
+						Value: 5,
+						Suit:  models.Club,
+					},
+					{
+						Value: 5,
+						Suit:  models.Club,
+					},
+					{
+						Value: 6,
+						Suit:  models.Club,
+					},
+					{
+						Value: 6,
+						Suit:  models.Club,
+					},
+				},
+			},
+			smallest: [][]models.Card{
+				{
+					{
+						Value: 4,
+						Suit:  models.Club,
+					},
+					{
+						Value: 4,
+						Suit:  models.Club,
+					},
+					{
+						Value: 4,
+						Suit:  models.Club,
+					},
+				},
+			},
+		}, {
+			game: &models.Game{
+				TrumpNumber: 2,
+				TrumpSuit:   models.Spade,
+			},
+			cards: [][]models.Card{
+				{
+					{
+						Value: 5,
+						Suit:  models.Club,
+					},
+				}, {
+					{
+						Value: 6,
+						Suit:  models.Club,
+					},
+				}, {
+					{
+						Value: 4,
+						Suit:  models.Club,
+					},
+				},
+			},
+			smallest: [][]models.Card{
+				{
+					{
+						Value: 4,
+						Suit:  models.Club,
+					},
+				},
+			},
+		}, {
+			game: &models.Game{
+				TrumpNumber: 2,
+				TrumpSuit:   models.Spade,
+			},
+			cards: [][]models.Card{
+				{
+					{
+						Value: 5,
+						Suit:  models.Club,
+					},
+					{
+						Value: 5,
+						Suit:  models.Club,
+					},
+					{
+						Value: 6,
+						Suit:  models.Club,
+					},
+					{
+						Value: 6,
+						Suit:  models.Club,
+					},
+				}, {
+					{
+						Value: 1,
+						Suit:  models.Club,
+					},
+				}, {
+					{
+						Value: 3,
+						Suit:  models.Club,
+					}, {
+						Value: 3,
+						Suit:  models.Club,
+					},
+				},
+			},
+			smallest: [][]models.Card{
+				{
+					{
+						Value: 1,
+						Suit:  models.Club,
+					},
+				},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		tc.cards = tc.game.GetUpdatedPlays(tc.cards)
+		tc.smallest = tc.game.GetUpdatedPlays(tc.smallest)
+		s, err := models.SmallestPlay(tc.cards)
+		if err != nil {
+			t.Error(err)
+		} else if !playsEqual(s, tc.smallest) {
+			t.Errorf("expected %v to be smallest for %v, instead got %v", tc.smallest, tc.cards, s)
 		}
 	}
 }
