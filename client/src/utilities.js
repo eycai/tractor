@@ -7,7 +7,7 @@ export const pages = {
 };
 
 export const testData = {
-  id: "HSVY",
+  id: "OLXE",
   users: [
     { username: "alex", connected: true },
     { username: "emily", connected: true },
@@ -33,9 +33,9 @@ export const testData = {
         points: 15,
         cardsPlayed: [
           [
-            { value: 1, suit: "CLUB" },
-            { value: 1, suit: "HEART" },
-            { value: 1, suit: "CLUB" },
+            { value: 3, suit: "CLUB" },
+            { value: 2, suit: "HEART" },
+            { value: 8, suit: "CLUB" },
             { value: 1, suit: "HEART" },
             { value: 1, suit: "CLUB" },
             { value: 1, suit: "HEART" }
