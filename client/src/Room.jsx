@@ -30,7 +30,7 @@ let Room = props => {
     //   props.navigate("/");
     // }
     updateRoom();
-    post("/test_set_room", testData);
+    // post("/test_set_room", testData);
     socket.on("update", data => {
       console.log("got an update on this room.");
       console.log(data);
