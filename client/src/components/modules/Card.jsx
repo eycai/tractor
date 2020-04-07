@@ -40,21 +40,22 @@ import { ReactComponent as TENCLUB } from "../../img/10CLUB.svg";
 import { ReactComponent as TENSPADE } from "../../img/10SPADE.svg";
 import { ReactComponent as TENDIAMOND } from "../../img/10DIAMOND.svg";
 import { ReactComponent as TENHEART } from "../../img/10HEART.svg";
-import { ReactComponent as JACKCLUB } from "../../img/11CLUB.svg";
-import { ReactComponent as JACKSPADE } from "../../img/11SPADE.svg";
-import { ReactComponent as JACKDIAMOND } from "../../img/11DIAMOND.svg";
-import { ReactComponent as JACKHEART } from "../../img/11HEART.svg";
-import { ReactComponent as QUEENCLUB } from "../../img/12CLUB.svg";
-import { ReactComponent as QUEENSPADE } from "../../img/12SPADE.svg";
-import { ReactComponent as QUEENDIAMOND } from "../../img/12DIAMOND.svg";
-import { ReactComponent as QUEENHEART } from "../../img/12HEART.svg";
-import { ReactComponent as KINGCLUB } from "../../img/13CLUB.svg";
-import { ReactComponent as KINGSPADE } from "../../img/13SPADE.svg";
-import { ReactComponent as KINGDIAMOND } from "../../img/13DIAMOND.svg";
-import { ReactComponent as KINGHEART } from "../../img/13HEART.svg";
 
-import { ReactComponent as BIGJOKER } from "../../img/1JOKER.svg";
-import { ReactComponent as LITTLEJOKER } from "../../img/2JOKER.svg";
+import JACKCLUB from "../../img/11CLUB.png";
+import JACKSPADE from "../../img/11SPADE.png";
+import JACKDIAMOND from "../../img/11DIAMOND.png";
+import JACKHEART from "../../img/11HEART.png";
+import QUEENCLUB from "../../img/12CLUB.png";
+import QUEENSPADE from "../../img/12SPADE.png";
+import QUEENDIAMOND from "../../img/12DIAMOND.png";
+import QUEENHEART from "../../img/12HEART.png";
+import KINGCLUB from "../../img/13CLUB.png";
+import KINGSPADE from "../../img/13SPADE.png";
+import KINGDIAMOND from "../../img/13DIAMOND.png";
+import KINGHEART from "../../img/13HEART.png";
+
+import BIGJOKER from "../../img/1JOKER.png";
+import LITTLEJOKER from "../../img/2JOKER.png";
 
 import "./Player.css";
 
@@ -186,46 +187,68 @@ let Card = props => {
       cardSVG = <TENDIAMOND className="Card-body" />;
       break;
     case "11CLUB":
-      cardSVG = <JACKCLUB className="Card-body" />;
+      cardSVG = <img style={{ height: "inherit" }} src={JACKCLUB} alt="card" />;
       break;
     case "11SPADE":
-      cardSVG = <JACKSPADE className="Card-body" />;
+      cardSVG = (
+        <img style={{ height: "inherit" }} src={JACKSPADE} alt="card" />
+      );
       break;
     case "11HEART":
-      cardSVG = <JACKHEART className="Card-body" />;
+      cardSVG = (
+        <img style={{ height: "inherit" }} src={JACKHEART} alt="card" />
+      );
       break;
     case "11DIAMOND":
-      cardSVG = <JACKDIAMOND className="Card-body" />;
+      cardSVG = (
+        <img style={{ height: "inherit" }} src={JACKDIAMOND} alt="card" />
+      );
       break;
     case "12CLUB":
-      cardSVG = <QUEENCLUB className="Card-body" />;
+      cardSVG = (
+        <img style={{ height: "inherit" }} src={QUEENCLUB} alt="Logo" />
+      );
       break;
     case "12SPADE":
-      cardSVG = <QUEENSPADE className="Card-body" />;
+      cardSVG = (
+        <img style={{ height: "inherit" }} src={QUEENSPADE} alt="card" />
+      );
       break;
     case "12HEART":
-      cardSVG = <QUEENHEART className="Card-body" />;
+      cardSVG = (
+        <img style={{ height: "inherit" }} src={QUEENHEART} alt="card" />
+      );
       break;
     case "12DIAMOND":
-      cardSVG = <QUEENDIAMOND className="Card-body" />;
+      cardSVG = (
+        <img style={{ height: "inherit" }} src={QUEENDIAMOND} alt="card" />
+      );
       break;
     case "13CLUB":
-      cardSVG = <KINGCLUB className="Card-body" />;
+      cardSVG = <img style={{ height: "inherit" }} src={KINGCLUB} alt="card" />;
       break;
     case "13SPADE":
-      cardSVG = <KINGSPADE className="Card-body" />;
+      cardSVG = (
+        <img style={{ height: "inherit" }} src={KINGSPADE} alt="card" />
+      );
       break;
     case "13HEART":
-      cardSVG = <KINGHEART className="Card-body" />;
+      cardSVG = (
+        <img style={{ height: "inherit" }} src={KINGHEART} alt="card" />
+      );
       break;
     case "13DIAMOND":
-      cardSVG = <KINGDIAMOND className="Card-body" />;
+      cardSVG = (
+        <img style={{ height: "inherit" }} src={KINGDIAMOND} alt="card" />
+      );
       break;
     case "1JOKER":
-      cardSVG = <BIGJOKER className="Card-body" />;
+      cardSVG = <img style={{ height: "inherit" }} src={BIGJOKER} alt="card" />;
       break;
     case "2JOKER":
-      cardSVG = <LITTLEJOKER className="Card-body" />;
+      cardSVG = (
+        <img style={{ height: "inherit" }} src={LITTLEJOKER} alt="card" />
+      );
       break;
     default:
       console.log(`invalid card: ${JSON.stringify(props.card)}`);

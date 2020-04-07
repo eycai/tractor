@@ -8,12 +8,15 @@ import { get, post } from "./api/fetch";
 import { pages } from "./utilities.js";
 import { socket } from "./client-socket";
 
-const testHand = [...Array(40).keys()].map(i => ({ value: 2, suit: "HEART" }));
+const testHand1 = [...Array(13).keys()].map(i => ({
+  value: i + 1,
+  suit: "DIAMOND"
+}));
 
 const testUser = {
   id: "testid",
   username: "alex",
-  hand: testHand,
+  hand: testHand1,
   kitty: [{ value: 1, suit: "HEART" }]
 };
 
