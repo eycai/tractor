@@ -318,7 +318,6 @@ func (s *Server) StartGame(w http.ResponseWriter, r *http.Request) {
 		GamePhase:   models.Start,
 	}
 
-	playOrder := s.Rooms[roomID].DrawOrder()
 	players := make(map[string]*models.Player, len(s.Rooms[roomID].Users))
 	for _, u := range s.Rooms[roomID].Users {
 		players[u.Username] = &models.Player{
@@ -328,8 +327,9 @@ func (s *Server) StartGame(w http.ResponseWriter, r *http.Request) {
 	}
 
 	game.Players = players
-	game.SetDrawOrder(playOrder)
 	s.Rooms[roomID].Game = &game
+	playOrder := s.Rooms[roomID].DrawOrder()
+	s.Rooms[roomID].Game.SetDrawOrder(playOrder)
 	s.broadcastUpdate(roomID, "game_started")
 	w.WriteHeader(http.StatusOK)
 }
