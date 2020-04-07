@@ -53,6 +53,9 @@ import { ReactComponent as KINGSPADE } from "../../img/13SPADE.svg";
 import { ReactComponent as KINGDIAMOND } from "../../img/13DIAMOND.svg";
 import { ReactComponent as KINGHEART } from "../../img/13HEART.svg";
 
+import { ReactComponent as BIGJOKER } from "../../img/1JOKER.svg";
+import { ReactComponent as LITTLEJOKER } from "../../img/2JOKER.svg";
+
 import "./Player.css";
 
 let convertCard = card => {
@@ -218,6 +221,14 @@ let Card = props => {
     case "13DIAMOND":
       cardSVG = <KINGDIAMOND className="Card-body" />;
       break;
+    case "1JOKER":
+      cardSVG = <BIGJOKER className="Card-body" />;
+      break;
+    case "2JOKER":
+      cardSVG = <LITTLEJOKER className="Card-body" />;
+      break;
+    default:
+      console.log(`invalid card: ${JSON.stringify(props.card)}`);
   }
 
   return <>{cardSVG}</>;
