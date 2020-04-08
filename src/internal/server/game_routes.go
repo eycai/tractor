@@ -263,3 +263,22 @@ func (s *Server) PlayCards(w http.ResponseWriter, r *http.Request) {
 	}
 	returnSuccess(w)
 }
+
+func (s *Server) AdvanceRound(w http.ResponseWriter, r *http.Request) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	userID := s.getUserID(w, r)
+	if userID == "" {
+		return
+	}
+
+	room, err := s.getRoom(userID)
+	if err != nil {
+		return
+	}
+
+	room.Game.EndRound()
+	s.broadcastUpdate(room.ID, "round_ended")
+	returnSuccess(w)
+}

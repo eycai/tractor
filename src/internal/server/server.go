@@ -62,6 +62,7 @@ func (s *Server) handleRoutes() {
 	s.handleFunc("/api/get_kitty", s.GetKitty)
 	s.handleFunc("/api/set_kitty", s.SetKitty)
 	s.handleFunc("/api/play_cards", s.PlayCards)
+	s.handleFunc("/api/advance_round", s.AdvanceRound)
 	s.handleFunc("/api/test_set_user", s.TestUpdateUser)
 	s.handleFunc("/api/test_set_room", s.TestUpdateRoom)
 }
