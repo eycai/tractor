@@ -41,3 +41,7 @@ func (p *Player) SwitchTeam() {
 func (p *Player) setOrder(i int) {
 	p.drawOrder = i
 }
+
+func (p *Player) setLevel(l int) {
+	p.Level = ((p.Level + l - 1) % 13) + 1
+}

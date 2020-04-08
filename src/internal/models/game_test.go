@@ -1137,7 +1137,7 @@ func TestPlayCards(t *testing.T) {
 			},
 			firstInTrick:   "a",
 			drawOrder:      []string{"b", "c", "d", "a"},
-			expectedWinner: "",
+			expectedWinner: "d",
 			expectedPlays: []plays{
 				{
 					play: [][]models.Card{
@@ -1245,7 +1245,7 @@ func TestPlayCards(t *testing.T) {
 			},
 			firstInTrick:   "a",
 			drawOrder:      []string{"b", "c", "d", "a"},
-			expectedWinner: "",
+			expectedWinner: "b",
 			expectedPlays: []plays{
 				{
 					play: [][]models.Card{
@@ -1323,6 +1323,406 @@ func TestPlayCards(t *testing.T) {
 
 		if tc.game.Turn != tc.expectedTurn {
 			t.Errorf("expected turn to be %s, instead got %s", tc.expectedTurn, tc.game.Turn)
+		}
+	}
+}
+
+func TestEndState(t *testing.T) {
+	type test struct {
+		game                *models.Game
+		winner              string
+		winningTrick        []models.Trick
+		kitty               []models.Card
+		expectedPoints      int
+		expectedKittyPoints int
+	}
+
+	tests := []test{
+		{
+			game: &models.Game{
+				Players: map[string]*models.Player{
+					"a": {
+						Team:   models.Bosses,
+						Points: 10,
+					},
+					"b": {
+						Team:   models.Peasants,
+						Points: 15,
+					},
+					"c": {
+						Team:   models.Bosses,
+						Points: 20,
+					},
+					"d": {
+						Team:   models.Peasants,
+						Points: 30,
+					},
+				},
+			},
+			kitty: []models.Card{
+				{Value: 5}, {Value: 2}, {Value: 3}, {Value: 4}, {Value: 10}, {Value: 2}, {Value: 10}, {Value: 8},
+			},
+			winningTrick: []models.Trick{
+				{
+					Pattern:  models.NOfAKind,
+					NumCards: 1,
+				},
+			},
+			winner:              "a",
+			expectedPoints:      45,
+			expectedKittyPoints: 0,
+		},
+		{
+			game: &models.Game{
+				Players: map[string]*models.Player{
+					"a": {
+						Team:   models.Bosses,
+						Points: 10,
+					},
+					"b": {
+						Team:   models.Peasants,
+						Points: 15,
+					},
+					"c": {
+						Team:   models.Bosses,
+						Points: 20,
+					},
+					"d": {
+						Team:   models.Peasants,
+						Points: 25,
+					},
+				},
+			},
+			kitty: []models.Card{
+				{Value: 5}, {Value: 2}, {Value: 3}, {Value: 4}, {Value: 10}, {Value: 2}, {Value: 10}, {Value: 8},
+			},
+			winningTrick: []models.Trick{
+				{
+					Pattern:  models.NOfAKind,
+					NumCards: 1,
+				},
+			},
+			winner:              "b",
+			expectedPoints:      40,
+			expectedKittyPoints: 50,
+		},
+		{
+			game: &models.Game{
+				Players: map[string]*models.Player{
+					"a": {
+						Team:   models.Bosses,
+						Points: 10,
+					},
+					"b": {
+						Team:   models.Peasants,
+						Points: 10,
+					},
+					"c": {
+						Team:   models.Bosses,
+						Points: 20,
+					},
+					"d": {
+						Team:   models.Peasants,
+						Points: 0,
+					},
+				},
+			},
+			kitty: []models.Card{
+				{Value: 5}, {Value: 2}, {Value: 3}, {Value: 4}, {Value: 6}, {Value: 2}, {Value: 9}, {Value: 8},
+			},
+			winningTrick: []models.Trick{
+				{
+					Pattern:  models.NOfAKind,
+					NumCards: 2,
+				},
+			},
+			winner:              "b",
+			expectedPoints:      10,
+			expectedKittyPoints: 20,
+		},
+		{
+			game: &models.Game{
+				Players: map[string]*models.Player{
+					"a": {
+						Team:   models.Bosses,
+						Points: 10,
+					},
+					"b": {
+						Team:   models.Peasants,
+						Points: 10,
+					},
+					"c": {
+						Team:   models.Bosses,
+						Points: 20,
+					},
+					"d": {
+						Team:   models.Peasants,
+						Points: 5,
+					},
+					"e": {
+						Team:   models.Peasants,
+						Points: 5,
+					},
+				},
+			},
+			kitty: []models.Card{
+				{Value: 5}, {Value: 2}, {Value: 3}, {Value: 4}, {Value: 6}, {Value: 2}, {Value: 9}, {Value: 8},
+			},
+			winningTrick: []models.Trick{
+				{
+					Pattern:  models.NOfAKind,
+					NumCards: 3,
+				},
+				{
+					Pattern:  models.Tractor,
+					NumCards: 4,
+				},
+			},
+			winner:              "b",
+			expectedPoints:      20,
+			expectedKittyPoints: 120,
+		},
+	}
+
+	for _, tc := range tests {
+		tc.game.SetKitty(tc.kitty)
+		tc.game.SetWinningTrick(tc.winner, tc.winningTrick)
+		p, kp, _ := tc.game.EndState()
+		if p != tc.expectedPoints {
+			t.Errorf("expected %d points for players %v, got %d", tc.expectedPoints, tc.game.Players, p)
+		}
+
+		if kp != tc.expectedKittyPoints {
+			t.Errorf("expected %d kitty points for kitty %v and last play %v by %s, got %d", tc.expectedKittyPoints, tc.kitty, tc.winningTrick, tc.winner, kp)
+		}
+	}
+}
+
+func TestEndRound(t *testing.T) {
+	type test struct {
+		game           *models.Game
+		winner         string
+		winningTrick   []models.Trick
+		kitty          []models.Card
+		drawOrder      []string
+		expectedLevels map[string]int
+		expectedTeam   map[string]models.Team
+		expectedTrump  int
+		expectedBanker string
+	}
+
+	tests := []test{
+		{
+			game: &models.Game{
+				Players: map[string]*models.Player{
+					"a": {
+						Team:   models.Bosses,
+						Points: 10,
+						Level:  2,
+					},
+					"b": {
+						Team:   models.Peasants,
+						Points: 10,
+						Level:  5,
+					},
+					"c": {
+						Team:   models.Bosses,
+						Points: 20,
+						Level:  2,
+					},
+					"d": {
+						Team:   models.Peasants,
+						Points: 30,
+						Level:  5,
+					},
+				},
+				Banker: "a",
+			},
+			kitty: []models.Card{
+				{Value: 5}, {Value: 2}, {Value: 3}, {Value: 4}, {Value: 10}, {Value: 2}, {Value: 10}, {Value: 8},
+			},
+			drawOrder: []string{"a", "b", "c", "d"},
+			winningTrick: []models.Trick{
+				{
+					Pattern:  models.NOfAKind,
+					NumCards: 1,
+				},
+			},
+			winner:         "a",
+			expectedLevels: map[string]int{"a": 3, "b": 5, "c": 3, "d": 5},
+			expectedBanker: "c",
+			expectedTeam: map[string]models.Team{
+				"a": models.Bosses,
+				"b": models.Peasants,
+				"c": models.Bosses,
+				"d": models.Peasants,
+			},
+			expectedTrump: 3,
+		},
+		{
+			game: &models.Game{
+				Players: map[string]*models.Player{
+					"a": {
+						Team:   models.Bosses,
+						Points: 10,
+						Level:  11,
+					},
+					"b": {
+						Team:   models.Peasants,
+						Points: 0,
+						Level:  5,
+					},
+					"c": {
+						Team:   models.Bosses,
+						Points: 20,
+						Level:  11,
+					},
+					"d": {
+						Team:   models.Peasants,
+						Points: 0,
+						Level:  5,
+					},
+				},
+				Banker: "a",
+			},
+			kitty: []models.Card{
+				{Value: 5}, {Value: 2}, {Value: 3}, {Value: 4}, {Value: 10}, {Value: 2}, {Value: 10}, {Value: 8},
+			},
+			drawOrder: []string{"b", "c", "d", "a"},
+			winningTrick: []models.Trick{
+				{
+					Pattern:  models.NOfAKind,
+					NumCards: 1,
+				},
+			},
+			winner:         "a",
+			expectedLevels: map[string]int{"a": 1, "b": 5, "c": 1, "d": 5},
+			expectedBanker: "c",
+			expectedTeam: map[string]models.Team{
+				"a": models.Bosses,
+				"b": models.Peasants,
+				"c": models.Bosses,
+				"d": models.Peasants,
+			},
+			expectedTrump: 1,
+		},
+		{
+			game: &models.Game{
+				Players: map[string]*models.Player{
+					"a": {
+						Team:   models.Bosses,
+						Points: 10,
+						Level:  12,
+					},
+					"b": {
+						Team:   models.Peasants,
+						Points: 10,
+						Level:  5,
+					},
+					"c": {
+						Team:   models.Bosses,
+						Points: 20,
+						Level:  12,
+					},
+					"d": {
+						Team:   models.Peasants,
+						Points: 60,
+						Level:  5,
+					},
+				},
+				Banker: "a",
+			},
+			kitty: []models.Card{
+				{Value: 5}, {Value: 2}, {Value: 3}, {Value: 4}, {Value: 8}, {Value: 2}, {Value: 6}, {Value: 8},
+			},
+			drawOrder: []string{"b", "c", "d", "a"},
+			winningTrick: []models.Trick{
+				{
+					Pattern:  models.NOfAKind,
+					NumCards: 1,
+				},
+			},
+			winner:         "b",
+			expectedLevels: map[string]int{"a": 12, "b": 5, "c": 12, "d": 5},
+			expectedBanker: "b",
+			expectedTeam: map[string]models.Team{
+				"a": models.Peasants,
+				"b": models.Bosses,
+				"c": models.Peasants,
+				"d": models.Bosses,
+			},
+			expectedTrump: 5,
+		},
+		{
+			game: &models.Game{
+				Players: map[string]*models.Player{
+					"a": {
+						Team:   models.Bosses,
+						Points: 10,
+						Level:  12,
+					},
+					"b": {
+						Team:   models.Peasants,
+						Points: 20,
+						Level:  5,
+					},
+					"c": {
+						Team:   models.Bosses,
+						Points: 20,
+						Level:  12,
+					},
+					"d": {
+						Team:   models.Peasants,
+						Points: 65,
+						Level:  5,
+					},
+				},
+				Banker: "c",
+			},
+			kitty: []models.Card{
+				{Value: 5}, {Value: 5}, {Value: 3}, {Value: 4}, {Value: 8}, {Value: 2}, {Value: 6}, {Value: 8},
+			},
+			drawOrder: []string{"b", "c", "d", "a"},
+			winningTrick: []models.Trick{
+				{
+					Pattern:  models.NOfAKind,
+					NumCards: 2,
+				},
+			},
+			winner:         "b",
+			expectedLevels: map[string]int{"a": 12, "b": 6, "c": 12, "d": 6},
+			expectedBanker: "d",
+			expectedTeam: map[string]models.Team{
+				"a": models.Peasants,
+				"b": models.Bosses,
+				"c": models.Peasants,
+				"d": models.Bosses,
+			},
+			expectedTrump: 6,
+		},
+	}
+
+	for _, tc := range tests {
+		tc.game.SetWinningTrick(tc.winner, tc.winningTrick)
+		tc.game.SetKitty(tc.kitty)
+		tc.game.SetDrawOrder(tc.drawOrder)
+		tc.game.EndRound()
+
+		for u, p := range tc.game.Players {
+			if p.Team != tc.expectedTeam[u] {
+				t.Errorf("expected team %s for player %s, got %s", tc.expectedTeam[u], u, p.Team)
+			}
+			if p.Level != tc.expectedLevels[u] {
+				t.Errorf("expected level %d for player %s, got %d", tc.expectedLevels[u], u, p.Level)
+			}
+		}
+
+		if tc.expectedBanker != tc.game.Banker {
+			t.Errorf("expected banker %s, got %s", tc.expectedBanker, tc.game.Banker)
+		}
+
+		if tc.expectedTrump != tc.game.TrumpNumber {
+			t.Errorf("expected trump number %d, got %d", tc.expectedTrump, tc.game.TrumpNumber)
 		}
 	}
 }

@@ -23,6 +23,7 @@ func (u *User) DealCard(c Card) {
 	u.Hand = append(u.Hand, c)
 }
 
+// PlayCards removes a play's cards from the user's hand.
 func (u *User) PlayCards(cards [][]Card) {
 	for _, t := range cards {
 		for _, c := range t {

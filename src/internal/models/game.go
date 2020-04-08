@@ -65,9 +65,6 @@ func (g *Game) FlipCard(c Card, numCards int, user string) bool {
 	if user == g.TrumpFlipUser {
 		// reinforce
 		g.TrumpNumCardsFlipped += numCards
-		if g.isFirstRound() {
-			g.setBanker(user)
-		}
 		return true
 	}
 
@@ -187,8 +184,7 @@ func (g *Game) PlayCards(user string, cards [][]Card, otherHands [][]Card) (Tric
 	}
 	// set current winner
 	if user == g.firstInTrick || NextTrickWins(g.winningTrick, trick) {
-		g.currentWinner = user
-		g.winningTrick = trick
+		g.SetWinningTrick(user, trick)
 	}
 
 	g.Players[user].CardsPlayed = cards
@@ -200,7 +196,34 @@ func (g *Game) PlayCards(user string, cards [][]Card, otherHands [][]Card) (Tric
 	return TrickEnded, cards, nil
 }
 
-// EndRound ends a round and resets the game for the next round.
+// EndState returns the ending state of the game.
+func (g *Game) EndState() (int, int, []Card) {
+	peasantPoints := 0
+	for _, p := range g.Players {
+		if p.Team == Peasants {
+			peasantPoints += p.Points
+		}
+	}
+
+	kittyPoints := 0
+	if g.Players[g.currentWinner].Team == Peasants {
+		mult := 0
+		for _, t := range g.winningTrick {
+			mult += int(math.Exp2(float64(t.NumCards)))
+		}
+		kittyPoints = GetPoints([][]Card{g.kitty}) * mult
+	}
+
+	return peasantPoints, kittyPoints, g.kitty
+}
+
+// SetWinningTrick sets the user and trick that is currently winning
+func (g *Game) SetWinningTrick(user string, trick []Trick) {
+	g.currentWinner = user
+	g.winningTrick = trick
+}
+
+// EndRound ends the round and resets the game for the next round.
 func (g *Game) EndRound() {
 	g.round++
 	peasantLevels := g.peasantLevels()
@@ -214,11 +237,11 @@ func (g *Game) EndRound() {
 		p.Points = 0
 		if winningTeam == Peasants {
 			if p.Team == Peasants {
-				p.Level += peasantLevels
+				p.setLevel(peasantLevels)
 			}
 		} else {
 			if p.Team == Bosses {
-				p.Level -= peasantLevels
+				p.setLevel(0 - peasantLevels)
 			}
 		}
 	}
@@ -242,15 +265,21 @@ func (g *Game) EndRound() {
 		ind := (i + bankerInd) % len(g.drawOrder)
 		if g.Players[g.drawOrder[ind]].Team == Bosses {
 			g.setBanker(g.drawOrder[ind])
+			g.TrumpNumber = g.Players[g.Banker].Level
+			break
 		}
 	}
 
 	// reset game
-	g.GamePhase = EndRound
+	g.GamePhase = Start
 	g.TrumpNumCardsFlipped = 0
 	g.TrumpFlipUser = ""
 	g.cardValues = make(map[Card]int)
 	g.kitty = make([]Card, 0)
+	g.drawOrder = make([]string, len(g.Players))
+	g.winningTrick = []Trick{}
+	g.currentWinner = ""
+	g.firstInTrick = g.Banker
 }
 
 // GetCardValues gets a map from plain card to card with trump updates after trump is set.
@@ -344,6 +373,7 @@ func (g *Game) setNextTurn() {
 func (g *Game) setBanker(user string) {
 	g.Banker = user
 	g.firstInTrick = user
+	g.Turn = user
 }
 
 func (g *Game) isFirstRound() bool {
@@ -374,31 +404,13 @@ func (g *Game) trickEnded() bool {
 	return true
 }
 
-func (g *Game) EndState() (int, int, []Card) {
-	peasantPoints := 0
-	for _, p := range g.Players {
-		if p.Team == Peasants {
-			peasantPoints += p.Points
-		}
-	}
-
-	kittyPoints := 0
-	if g.Players[g.currentWinner].Team == Peasants {
-		mult := 0
-		for _, t := range g.winningTrick {
-			mult += int(math.Exp2(float64(t.NumCards)))
-		}
-		kittyPoints := GetPoints([][]Card{g.kitty})
-		kittyPoints = kittyPoints * mult
-	}
-
-	return peasantPoints, kittyPoints, g.kitty
-}
-
 func (g *Game) peasantLevels() int {
 	peasantPoints, kittyPoints, _ := g.EndState()
 	peasantPoints += kittyPoints
 	numDecks := len(g.Players) / 2
 	pointsPerLevel := numDecks * 20
+	if peasantPoints == 0 {
+		return -3
+	}
 	return (peasantPoints / pointsPerLevel) - 2
 }

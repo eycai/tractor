@@ -1,7 +1,6 @@
 package models
 
-import "log"
-
+// Room a room in the tractor game.
 type Room struct {
 	ID       string        `json:"id"`
 	Name     string        `json:"name"`
@@ -11,11 +10,13 @@ type Room struct {
 	Capacity int           `json:"capacity"`
 }
 
+// UserStatus metadata about the user's current status.
 type UserStatus struct {
 	Username  string `json:"username"`
 	Connected bool   `json:"connected"`
 }
 
+// HasUser returns true if the room has a user with username user.
 func (r *Room) HasUser(user string) bool {
 	for _, u := range r.Users {
 		if u.Username == user {
@@ -25,17 +26,17 @@ func (r *Room) HasUser(user string) bool {
 	return false
 }
 
+// DrawOrder returns the drawing order for the room.
 func (r *Room) DrawOrder() []string {
 	users := make([]string, len(r.Users))
-	banker := r.Game.Turn
-	bankerIndex := 0
+	first := r.Game.Turn
+	firstIndex := 0
 	for i, u := range r.Users {
 		users[i] = u.Username
-		if u.Username == banker {
-			bankerIndex = i
+		if u.Username == first {
+			firstIndex = i
 		}
 	}
-	users = append(users[bankerIndex:], users[0:bankerIndex]...)
-	log.Printf("users: %v", users)
+	users = append(users[firstIndex:], users[0:firstIndex]...)
 	return users
 }
