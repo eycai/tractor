@@ -253,7 +253,7 @@ func (s *Server) ConnectUser(w http.ResponseWriter, r *http.Request) {
 	// if already has connection, remove it first
 	socket := s.Users[userID].SocketID
 	if socket != "" {
-		go s.Emit(socket, "stale", models.EmptyResponse{})
+		s.emit(socket, "stale", models.EmptyResponse{})
 	}
 
 	// add socket map

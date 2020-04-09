@@ -79,7 +79,7 @@ func (s *Server) dealCards(users map[string]*models.User, dealOrder []string, de
 		s.emitUpdateToUser(users[dealOrder[dealUser]].ID, "card_drawn")
 		log.Printf("draw card %s, %v", dealOrder[dealUser], deck.Cards[i])
 		dealUser = (dealUser + 1) % len(dealOrder)
-		time.Sleep(time.Second)
+		time.Sleep(time.Millisecond * 500)
 	}
 	s.mu.Lock()
 	room.Game.GamePhase = models.DrawingComplete
@@ -192,11 +192,11 @@ func (s *Server) SetKitty(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// update kitty
-	user.Hand = req.Hand
 	user.Kitty = req.Kitty
 
-	// reassign values after losing them
-	user.Hand = room.Game.GetUpdatedCards(req.Hand)
+	// reassign values
+	user.Hand = room.Game.GetUpdatedCards(user.Hand)
+
 	room.Game.GamePhase = models.Playing
 	s.broadcastUpdate(room.ID, "round_started")
 	returnSuccess(w)

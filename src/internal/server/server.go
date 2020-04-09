@@ -122,7 +122,7 @@ func (s *Server) SendHeartbeats() {
 		s.mu.Lock()
 		for u, h := range s.Heartbeats {
 			if !h.Disconnected {
-				go s.emitWSToUser(u, "heartbeat", "")
+				s.emitWSToUser(u, "heartbeat", "")
 			}
 		}
 		s.mu.Unlock()

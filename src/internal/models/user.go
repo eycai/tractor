@@ -1,5 +1,7 @@
 package models
 
+import "sort"
+
 // User a user in the tractor game
 type User struct {
 	ID       string `json:"id"`
@@ -21,6 +23,7 @@ func (u *User) Reset() {
 // DealCard deals card c into the user's hands
 func (u *User) DealCard(c Card) {
 	u.Hand = append(u.Hand, c)
+	sort.Sort(ByValue(u.Hand))
 }
 
 // PlayCards removes a play's cards from the user's hand.
@@ -30,6 +33,15 @@ func (u *User) PlayCards(cards [][]Card) {
 			u.removeCardFromHand(c)
 		}
 	}
+}
+
+// UpdateWithKitty lets the user set a new kitty.
+func (u *User) UpdateWithKitty(newKitty []Card) {
+	u.Hand = append(u.Hand, u.Kitty...)
+	for _, c := range newKitty {
+		u.removeCardFromHand(c)
+	}
+	u.Kitty = newKitty
 }
 
 func (u *User) removeCardFromHand(card Card) {

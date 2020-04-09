@@ -32,7 +32,6 @@ type FlipCardsRequest struct {
 
 type SetKittyRequest struct {
 	Kitty []Card `json:"kitty"`
-	Hand  []Card `json:"hand"`
 }
 
 type PlayCardsRequest struct {

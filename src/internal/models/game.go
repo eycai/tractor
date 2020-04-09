@@ -77,6 +77,8 @@ func (g *Game) FlipCard(c Card, numCards int, user string) bool {
 		if g.isFirstRound() {
 			g.setBanker(user)
 		}
+		g.cardValues = make(map[Card]int)
+		g.GetCardValues()
 		return true
 	}
 
@@ -319,7 +321,7 @@ func (g *Game) GetCardValues() map[Card]int {
 	return cardValues
 }
 
-// GetDeck gets a plain deck, with no trump or game value fields set.
+// GetDeck gets a plain deck.
 func (g *Game) GetDeck() Deck {
 	numDecks := len(g.Players) / 2
 	deck := []Card{}
@@ -341,6 +343,8 @@ func (g *Game) GetDeck() Deck {
 			}
 		}
 	}
+	// for sorting while drawing
+	deck = g.GetUpdatedCards(deck)
 	d := Deck{Cards: deck}
 	d.shuffle()
 	return d

@@ -85,7 +85,7 @@ func (s *Server) emitUpdateToUser(userID string, updateEventName string) {
 }
 
 func (s *Server) emitWSToUser(userID string, eventName string, event interface{}) {
-	s.Emit(s.Users[userID].SocketID, eventName, event)
+	s.emit(s.Users[userID].SocketID, eventName, event)
 }
 
 func returnSuccess(w http.ResponseWriter) {

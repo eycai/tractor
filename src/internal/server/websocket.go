@@ -7,9 +7,9 @@ import (
 	socketio "github.com/googollee/go-socket.io"
 )
 
-func (s *Server) Emit(wsID string, eventName string, event interface{}) {
+func (s *Server) emit(wsID string, eventName string, event interface{}) {
 	if ws, ok := s.Sockets[wsID]; ok {
-		ws.Emit(eventName, event)
+		go ws.Emit(eventName, event)
 	}
 
 }
