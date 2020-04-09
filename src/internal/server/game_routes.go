@@ -197,6 +197,7 @@ func (s *Server) SetKitty(w http.ResponseWriter, r *http.Request) {
 
 	// reassign values after losing them
 	user.Hand = room.Game.GetUpdatedCards(req.Hand)
+	room.Game.GamePhase = models.Playing
 	s.broadcastUpdate(room.ID, "round_started")
 	returnSuccess(w)
 }
