@@ -17,6 +17,8 @@ const playerLocations = [
   [null, 45, 10]
 ];
 
+const trumpNumber = 2;
+
 const Game = props => {
   console.log(playerLocations);
   let game = props.roomInfo.game;
@@ -29,6 +31,35 @@ const Game = props => {
 
   const startDrawing = () => {
     post("/begin_drawing", {});
+  };
+
+  const declarable = () => {
+    const cards = selectedCards.map(i => props.user.hand[i]);
+    for (const c of cards) {
+      if (c.value !== trumpNumber && c.suit === cards[0].value) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const declareTrump = () => {
+    console.log("declaring");
+    const cards = selectedCards.map(i => props.user.hand[i]);
+    if (declarable()) {
+      post("/flip_cards", { card: cards[0], numCards: cards.length });
+    } else {
+      console.log("invalid");
+    }
+  };
+
+  const getKitty = () => {
+    console.log("getting the kitty");
+    post("/get_kitty");
+  };
+
+  const setKitty = () => {
+    post("/set_kitty");
   };
 
   let players = props.roomInfo.users
@@ -68,6 +99,37 @@ const Game = props => {
           PLAY
         </div>
       );
+      break;
+    case "DRAWING":
+      gameButton = (
+        <div className="Game-play-button" onClick={declareTrump}>
+          DECLARE
+        </div>
+      );
+      break;
+    case "DRAWING_COMPLETE":
+      if (props.user.username === props.roomInfo.game.trumpFlipUser) {
+        gameButton = (
+          <div className="Game-play-button" onClick={getKitty}>
+            GET KITTY
+          </div>
+        );
+      } else {
+        gameButton = (
+          <div className="Game-play-button" onClick={declareTrump}>
+            DECLARE
+          </div>
+        );
+      }
+      break;
+    case "SET_KITTY":
+      if (props.user.username === props.roomInfo.game.trumpFlipUser) {
+        gameButton = (
+          <div className="Game-play-button" onClick={setKitty}>
+            SET KITTY
+          </div>
+        );
+      }
       break;
   }
   return (
