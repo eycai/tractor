@@ -2,9 +2,9 @@ import React from "react";
 
 import "./PlayerHand.css";
 import Card from "./Card";
-import { cardHeight, cardWidth, offset } from "./Player";
+import { cardHeight, cardWidth, offset } from "./PlayerCards";
 
-let PlayerHand = props => {
+let PlayerHand = (props) => {
   const initialOffset = (offset * (props.user.hand.length - 1) + cardWidth) / 2;
 
   return (
@@ -15,18 +15,20 @@ let PlayerHand = props => {
             style={{
               height: cardHeight,
               transform: `translateY(-100%) translateX(${i * offset -
-                initialOffset}px)`
+                initialOffset}px)`,
             }}
             className="PlayerHand-card-container"
           >
             <div
               className={`PlayerHand-card-body ${
-                props.selectedCards.includes(i) ? "PlayerHand-selected" : ""
+                props.selectedCards.includes(c) ? "PlayerHand-selected" : ""
               }`}
               onClick={() => {
-                props.selectedCards.includes(i)
-                  ? props.setSelectedCards(cards => cards.filter(e => e !== i))
-                  : props.setSelectedCards(cards => cards.concat(i));
+                props.selectedCards.includes(c)
+                  ? props.setSelectedCards((cards) =>
+                      cards.filter((e) => e !== c)
+                    )
+                  : props.setSelectedCards((cards) => cards.concat(c));
               }}
             >
               <Card card={c} />

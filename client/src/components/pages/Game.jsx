@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import Player from "../modules/Player";
 import InfoBox from "../modules/InfoBox";
 import PlayerHand from "../modules/PlayerHand";
+import PlayerCards from "../modules/PlayerCards";
 import Chat from "../modules/Chat";
 
 import { post } from "../../api/fetch";
@@ -14,19 +15,20 @@ import "../../utilities.css";
 const playerLocations = [
   [10, 45, null],
   [50, 28, null],
-  [null, 45, 10]
+  [null, 45, 10],
 ];
 
 const trumpNumber = 2;
 
-const Game = props => {
+const Game = (props) => {
   console.log(playerLocations);
   let game = props.roomInfo.game;
   const [selectedCards, setSelectedCards] = useState([]);
 
   const playCards = () => {
-    const cards = selectedCards.map(i => props.user.hand[i]);
-    console.log(`Playing ${JSON.stringify(cards)}`);
+    console.log(`Playing ${JSON.stringify(selectedCards)}`);
+    // Disallow leads for now TODO alex make leads possible
+    post("/play_cards", { cards: [selectedCards] });
   };
 
   const startDrawing = () => {
@@ -34,9 +36,8 @@ const Game = props => {
   };
 
   const declarable = () => {
-    const cards = selectedCards.map(i => props.user.hand[i]);
-    for (const c of cards) {
-      if (c.value !== trumpNumber && c.suit === cards[0].value) {
+    for (const c of selectedCards) {
+      if (c.value !== trumpNumber && c.suit === selectedCards[0].value) {
         return false;
       }
     }
@@ -45,9 +46,12 @@ const Game = props => {
 
   const declareTrump = () => {
     console.log("declaring");
-    const cards = selectedCards.map(i => props.user.hand[i]);
+
     if (declarable()) {
-      post("/flip_cards", { card: cards[0], numCards: cards.length });
+      post("/flip_cards", {
+        card: selectedCards[0],
+        numCards: selectedCards.length,
+      });
     } else {
       console.log("invalid");
     }
@@ -59,11 +63,17 @@ const Game = props => {
   };
 
   const setKitty = () => {
-    post("/set_kitty");
+    post("/set_kitty", { kitty: selectedCards }).then((res) => {
+      if (res.status === 200) {
+        setSelectedCards([]);
+      } else {
+        console.log("error setting kitty");
+      }
+    });
   };
 
   let players = props.roomInfo.users
-    .filter(p => p.username !== props.user.username)
+    .filter((p) => p.username !== props.user.username)
     .map((p, i) => (
       <Player
         key={p.username}
@@ -87,18 +97,21 @@ const Game = props => {
 
   switch (props.roomInfo.game.gamePhase) {
     case "START":
-      gameButton = (
-        <div className="Game-play-button" onClick={startDrawing}>
-          START DRAWING
-        </div>
-      );
+      if (props.roomInfo.host === props.user.username)
+        gameButton = (
+          <div className="Game-play-button" onClick={startDrawing}>
+            START DRAWING
+          </div>
+        );
       break;
     case "PLAYING":
-      gameButton = (
-        <div className="Game-play-button" onClick={playCards}>
-          PLAY
-        </div>
-      );
+      if (props.roomInfo.game.turn === props.user.username) {
+        gameButton = (
+          <div className="Game-play-button" onClick={playCards}>
+            PLAY
+          </div>
+        );
+      }
       break;
     case "DRAWING":
       gameButton = (
@@ -132,6 +145,7 @@ const Game = props => {
       }
       break;
   }
+  console.log(props.roomInfo.game.players[props.user.username]);
   return (
     <>
       {players}
@@ -149,6 +163,15 @@ const Game = props => {
       {centerText}
       {true ? (
         <div className="Game-play-button-container">{gameButton}</div>
+      ) : null}
+      {props.user.username in props.roomInfo.game.players &&
+      props.roomInfo.game.players[props.user.username].cardsPlayed ? (
+        <div className="Game-played-cards">
+          <PlayerCards
+            playerInfo={props.roomInfo.game.players[props.user.username]}
+            {...props}
+          />
+        </div>
       ) : null}
     </>
   );

@@ -1,7 +1,7 @@
 import React from "react";
 import "./InfoBox.css";
 
-let InfoBox = props => {
+let InfoBox = (props) => {
   let points = Object.values(props.roomInfo.game.players).reduce(
     (t, a) => t + a.points,
     0
@@ -17,7 +17,8 @@ let InfoBox = props => {
         </div>
         <div>
           <span className="InfoBox-label">Declared: </span>{" "}
-          {props.roomInfo.game.trumpSuit} {props.roomInfo.game.trumpNumber}
+          {props.roomInfo.game.trumpSuit}{" "}
+          {props.roomInfo.game.trumpNumCardsFlipped}
         </div>
       </div>
     </div>

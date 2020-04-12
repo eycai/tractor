@@ -55,3 +55,9 @@
   width: 100%;
   align-items: flex-end;
 }
+
+.Game-played-cards {
+  position: absolute;
+  top: 74%;
+  left: 50%;
+}
