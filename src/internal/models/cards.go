@@ -2,6 +2,7 @@ package models
 
 import (
 	"fmt"
+	"log"
 	"math"
 	"math/rand"
 	"sort"
@@ -79,16 +80,22 @@ func GetPoints(hand [][]Card) int {
 // IsValidPlay returns true if the two plays match in length, and suit is valid
 func IsValidPlay(prev [][]Card, next [][]Card, hand []Card) bool {
 	if lenPlay(prev) != lenPlay(next) {
+		log.Printf("len of prev %d not equal len of next %d", lenPlay(prev), lenPlay(next))
 		return false
 	}
 
 	// used fewer cards of suit than min(available, length of hand)
 	if prev[0][0].IsTrump() && numTrumpCards(cardList(next)) <
 		int(math.Min(float64(numTrumpCards(hand)), float64(len(hand)))) {
+		log.Printf("prev play trump, but played %d trump, and %d available", numTrumpCards(cardList(next)), int(math.Min(float64(numTrumpCards(hand)), float64(len(hand)))))
 		return false
 	}
 	if !prev[0][0].IsTrump() && numCardsOfSuit(cardList(next), prev[0][0].Suit) <
 		int(math.Min(float64(numCardsOfSuit(hand, prev[0][0].Suit)), float64(len(hand)))) {
+		log.Printf("prev play trump, but played %d trump, and %d available",
+			numCardsOfSuit(cardList(next), prev[0][0].Suit),
+			int(math.Min(float64(numCardsOfSuit(hand, prev[0][0].Suit)), float64(len(hand)))),
+		)
 		return false
 	}
 
@@ -270,7 +277,7 @@ func (c *Card) IsTrumpSuit() bool {
 
 // WithGameValues returns an updated card with the game values set based on vals.
 func (c *Card) WithGameValues(vals map[Card]int) Card {
-	c.gameValue = vals[*c]
+	c.gameValue = vals[Card{Value: c.Value, Suit: c.Suit}]
 	return *c
 }
 

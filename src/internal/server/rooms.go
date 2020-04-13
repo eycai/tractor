@@ -49,8 +49,11 @@ func (s *Server) setUserConnectionStatus(userID string, connected bool) {
 	}
 }
 func (s *Server) removeFromRoom(userID string, roomID string) {
-	s.Users[userID].RoomID = ""
-	user := s.Users[userID].Username
+	u := s.Users[userID]
+	u.RoomID = ""
+	u.Hand = []models.Card{}
+	u.Kitty = []models.Card{}
+	user := u.Username
 	room, ok := s.Rooms[roomID]
 	if !ok {
 		return

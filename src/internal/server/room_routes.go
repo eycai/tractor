@@ -119,6 +119,11 @@ func (s *Server) JoinRoom(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if s.Users[userID].RoomID != "" {
+		prevRoomID := s.Users[userID].RoomID
+		s.removeFromRoom(userID, prevRoomID)
+		s.broadcastUpdate(prevRoomID, "player_left")
+	}
 	// s.AddToWSRoom(s.Users[userID].SocketID, req.RoomID)
 	if !room.HasUser(s.Users[userID].Username) {
 		s.addToRoom(userID, req.RoomID)
@@ -276,6 +281,12 @@ func (s *Server) CreateRoom(w http.ResponseWriter, r *http.Request) {
 	userID, err := s.processPostRequest(w, r, &req)
 	if err != nil {
 		return
+	}
+
+	if s.Users[userID].RoomID != "" {
+		prevRoomID := s.Users[userID].RoomID
+		s.removeFromRoom(userID, prevRoomID)
+		s.broadcastUpdate(prevRoomID, "player_left")
 	}
 
 	room := s.createRoom(userID, req.Name, req.Capacity)

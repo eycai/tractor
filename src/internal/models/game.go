@@ -2,6 +2,7 @@ package models
 
 import (
 	"fmt"
+	"log"
 	"math"
 	"sort"
 )
@@ -64,7 +65,7 @@ func (g *Game) FlipCard(c Card, numCards int, user string) bool {
 
 	if user == g.TrumpFlipUser {
 		// reinforce
-		g.TrumpNumCardsFlipped += numCards
+		g.TrumpNumCardsFlipped = numCards
 		return true
 	}
 
@@ -132,8 +133,10 @@ func (g *Game) GetUpdatedPlays(cards [][]Card) [][]Card {
 func (g *Game) IsValidPlayForGame(cards [][]Card, hand []Card) bool {
 	cards = g.GetUpdatedPlays(cards)
 	firstPlay := g.GetUpdatedPlays(g.Players[g.firstInTrick].CardsPlayed)
+	log.Printf("first play: %v", firstPlay)
 	tricks, err := GetTricks(cards)
 	if err != nil {
+		log.Printf("can't parse first play")
 		return false
 	}
 

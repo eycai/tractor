@@ -74,7 +74,7 @@ func (s *Server) dealCards(users map[string]*models.User, dealOrder []string, de
 	log.Printf("users map: %v", users)
 	for i := 0; i < len(deck.Cards)-room.Game.KittySize(); i++ {
 		s.mu.Lock()
-		users[dealOrder[dealUser]].DealCard(deck.Cards[i])
+		users[dealOrder[dealUser]].DealCard(deck.Cards[i], room.Game)
 		s.mu.Unlock()
 		s.emitUpdateToUser(users[dealOrder[dealUser]].ID, "card_drawn")
 		log.Printf("draw card %s, %v", dealOrder[dealUser], deck.Cards[i])
@@ -150,15 +150,15 @@ func (s *Server) GetKitty(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for _, u := range users {
-		u.Hand = room.Game.GetUpdatedCards(u.Hand)
-	}
-
 	kitty := room.Game.GetKitty()
-	kitty = room.Game.GetUpdatedCards(kitty)
 	log.Printf("kitty: %v", kitty)
 
 	users[room.Game.Banker].Kitty = kitty
+	users[room.Game.Banker].Hand = append(users[room.Game.Banker].Hand, kitty...)
+
+	for _, u := range users {
+		u.Hand = room.Game.GetUpdatedCards(u.Hand)
+	}
 	s.broadcastUpdate(room.ID, "cards_finalized")
 	returnSuccess(w)
 }
@@ -191,8 +191,7 @@ func (s *Server) SetKitty(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// update kitty
-	user.Kitty = req.Kitty
+	user.UpdateWithKitty(req.Kitty)
 
 	// reassign values
 	user.Hand = room.Game.GetUpdatedCards(user.Hand)
@@ -212,19 +211,24 @@ func (s *Server) PlayCards(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Printf("Play: %v", req.Cards)
+
 	room, err := s.getRoom(userID)
 	if err != nil {
+		log.Printf("room does not exist")
 		http.Error(w, "room does not exist", http.StatusConflict)
 		return
 	}
 
 	if !room.Game.IsValidPlayForGame(req.Cards, s.Users[userID].Hand) {
+		log.Printf("play invalid for game")
 		http.Error(w, "play invalid", http.StatusConflict)
 		return
 	}
 
 	users, err := s.usernamesToUsers(room.DrawOrder())
 	if err != nil {
+		log.Printf("invalid users")
 		http.Error(w, "invalid users", http.StatusConflict)
 	}
 
@@ -237,6 +241,7 @@ func (s *Server) PlayCards(w http.ResponseWriter, r *http.Request) {
 
 	status, played, err := room.Game.PlayCards(s.Users[userID].Username, req.Cards, hands)
 	if err != nil {
+		log.Printf("invalid play from playcards")
 		http.Error(w, "invalid play", http.StatusConflict)
 	}
 
@@ -262,6 +267,7 @@ func (s *Server) PlayCards(w http.ResponseWriter, r *http.Request) {
 	} else {
 		s.broadcastUpdate(room.ID, "trick_ended")
 	}
+	log.Printf("success")
 	returnSuccess(w)
 }
 
