@@ -153,6 +153,9 @@ func (g *Game) GetUpdatedPlays(cards [][]Card) [][]Card {
 
 // IsValidPlayForGame determines if the play is valid given current game circumstances
 func (g *Game) IsValidPlayForGame(cards [][]Card, hand []Card) bool {
+	if !HasCards(hand, cards) {
+		return false
+	}
 	cards = g.GetUpdatedPlays(cards)
 	firstPlay := g.GetUpdatedPlays(g.Players[g.firstInTrick].CardsPlayed)
 	log.Printf("first play: %v", firstPlay)
@@ -415,7 +418,9 @@ func (g *Game) distributePoints() {
 		points += GetPoints(p.CardsPlayed)
 		p.ResetCards()
 	}
-	g.Players[g.currentWinner].Points += points
+	if g.Players[g.currentWinner].Team == Peasants {
+		g.Players[g.currentWinner].Points += points
+	}
 }
 
 func (g *Game) endTrick() {

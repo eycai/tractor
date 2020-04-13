@@ -735,6 +735,93 @@ func TestNextTrickWins(t *testing.T) {
 		}
 	}
 }
+
+func TestHasCards(t *testing.T) {
+	type test struct {
+		hand  []models.Card
+		cards [][]models.Card
+		valid bool
+	}
+
+	tests := []test{
+		{
+			hand: []models.Card{
+				{Value: 2, Suit: models.Spade},
+				{Value: 2, Suit: models.Spade},
+				{Value: 3, Suit: models.Spade},
+			},
+			cards: [][]models.Card{
+				[]models.Card{
+					{Value: 2, Suit: models.Spade},
+					{Value: 2, Suit: models.Spade},
+				},
+				[]models.Card{
+					{Value: 3, Suit: models.Spade},
+				},
+			},
+			valid: true,
+		},
+		{
+			hand: []models.Card{
+				{Value: 2, Suit: models.Spade},
+				{Value: 2, Suit: models.Spade},
+				{Value: 3, Suit: models.Spade},
+				{Value: 3, Suit: models.Spade},
+				{Value: 4, Suit: models.Spade},
+			},
+			cards: [][]models.Card{
+				[]models.Card{
+					{Value: 2, Suit: models.Spade},
+					{Value: 2, Suit: models.Spade},
+				},
+				[]models.Card{
+					{Value: 3, Suit: models.Spade},
+				},
+			},
+			valid: true,
+		},
+		{
+			hand: []models.Card{
+				{Value: 2, Suit: models.Spade},
+				{Value: 3, Suit: models.Spade},
+			},
+			cards: [][]models.Card{
+				[]models.Card{
+					{Value: 2, Suit: models.Spade},
+					{Value: 2, Suit: models.Spade},
+				},
+				[]models.Card{
+					{Value: 3, Suit: models.Spade},
+				},
+			},
+			valid: false,
+		},
+		{
+			hand: []models.Card{
+				{Value: 2, Suit: models.Spade},
+				{Value: 2, Suit: models.Spade},
+				{Value: 3, Suit: models.Spade},
+			},
+			cards: [][]models.Card{
+				[]models.Card{
+					{Value: 2, Suit: models.Spade},
+					{Value: 2, Suit: models.Spade},
+				},
+				[]models.Card{
+					{Value: 4, Suit: models.Spade},
+				},
+			},
+			valid: false,
+		},
+	}
+
+	for _, tc := range tests {
+		if models.HasCards(tc.hand, tc.cards) != tc.valid {
+			t.Errorf("expected valid to be %v for hand %v and cards %v", tc.valid, tc.hand, tc.cards)
+		}
+	}
+}
+
 func TestParse(t *testing.T) {
 	type test struct {
 		input       []models.Card

@@ -77,6 +77,20 @@ func GetPoints(hand [][]Card) int {
 	return points
 }
 
+func HasCards(hand []Card, cards [][]Card) bool {
+	available := make(map[Card]int)
+	for _, c := range hand {
+		available[Card{Value: c.Value, Suit: c.Suit}]++
+	}
+	for _, c := range cardList(cards) {
+		available[c]--
+		if available[c] < 0 {
+			return false
+		}
+	}
+	return true
+}
+
 // IsValidPlay returns true if the two plays match in length, and suit is valid
 func IsValidPlay(prev [][]Card, next [][]Card, hand []Card) bool {
 	if lenPlay(prev) != lenPlay(next) {

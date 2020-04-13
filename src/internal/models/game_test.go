@@ -1126,10 +1126,10 @@ func TestPlayCards(t *testing.T) {
 			},
 			game: &models.Game{
 				Players: map[string]*models.Player{
-					"a": {},
-					"b": {},
-					"c": {},
-					"d": {},
+					"a": {Team: models.Bosses},
+					"b": {Team: models.Peasants},
+					"c": {Team: models.Bosses},
+					"d": {Team: models.Peasants},
 				},
 				Turn:        "a",
 				TrumpSuit:   models.Diamond,
@@ -1234,10 +1234,10 @@ func TestPlayCards(t *testing.T) {
 			},
 			game: &models.Game{
 				Players: map[string]*models.Player{
-					"a": {},
-					"b": {},
-					"c": {},
-					"d": {},
+					"a": {Team: models.Peasants},
+					"b": {Team: models.Bosses},
+					"c": {Team: models.Peasants},
+					"d": {Team: models.Bosses},
 				},
 				Turn:        "a",
 				TrumpSuit:   models.Diamond,
@@ -1284,7 +1284,7 @@ func TestPlayCards(t *testing.T) {
 					status: models.TrickEnded,
 				},
 			},
-			expectedPoints: map[string]int{"a": 0, "b": 15, "c": 0, "d": 0},
+			expectedPoints: map[string]int{"a": 0, "b": 0, "c": 0, "d": 0},
 			expectedTurn:   "b",
 		},
 	}
