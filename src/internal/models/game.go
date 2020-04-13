@@ -106,6 +106,28 @@ func (g *Game) SetKitty(k []Card) {
 func (g *Game) GetKitty() []Card {
 	k := g.kitty
 	g.kitty = []Card{}
+
+	for _, p := range g.Players {
+		p.ResetCards()
+	}
+
+	if g.isFirstRound() {
+		bankerInd := 0
+		for i, u := range g.drawOrder {
+			if u == g.Banker {
+				bankerInd = i
+				break
+			}
+		}
+
+		for i, u := range g.drawOrder {
+			if i%2 == bankerInd%2 {
+				g.Players[u].Team = Bosses
+			} else {
+				g.Players[u].Team = Peasants
+			}
+		}
+	}
 	return k
 }
 
@@ -136,7 +158,7 @@ func (g *Game) IsValidPlayForGame(cards [][]Card, hand []Card) bool {
 	log.Printf("first play: %v", firstPlay)
 	tricks, err := GetTricks(cards)
 	if err != nil {
-		log.Printf("can't parse first play")
+		log.Printf("can't parse play")
 		return false
 	}
 

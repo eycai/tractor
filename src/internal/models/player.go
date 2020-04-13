@@ -26,7 +26,7 @@ func (p *Player) PlayCards(cards [][]Card) {
 
 // ResetCards resets the played cards to none
 func (p *Player) ResetCards() {
-	p.CardsPlayed = [][]Card{}
+	p.CardsPlayed = nil
 }
 
 // SwitchTeam sets the player's current team to the opposite team

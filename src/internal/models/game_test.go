@@ -221,7 +221,7 @@ func TestFlipCard(t *testing.T) {
 				Suit:  models.Club,
 			},
 			flipUser: "a",
-			flipNum:  1,
+			flipNum:  2,
 			expected: &models.Game{
 				TrumpNumber:          2,
 				TrumpSuit:            models.Club,

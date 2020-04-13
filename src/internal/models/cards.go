@@ -84,17 +84,17 @@ func IsValidPlay(prev [][]Card, next [][]Card, hand []Card) bool {
 		return false
 	}
 
-	// used fewer cards of suit than min(available, length of hand)
+	// used fewer cards of suit than min(available, length of play)
 	if prev[0][0].IsTrump() && numTrumpCards(cardList(next)) <
-		int(math.Min(float64(numTrumpCards(hand)), float64(len(hand)))) {
-		log.Printf("prev play trump, but played %d trump, and %d available", numTrumpCards(cardList(next)), int(math.Min(float64(numTrumpCards(hand)), float64(len(hand)))))
+		int(math.Min(float64(numTrumpCards(hand)), float64(lenPlay(prev)))) {
+		log.Printf("prev play trump, but played %d trump, and %d available", numTrumpCards(cardList(next)), int(math.Min(float64(numTrumpCards(hand)), float64(lenPlay(prev)))))
 		return false
 	}
 	if !prev[0][0].IsTrump() && numCardsOfSuit(cardList(next), prev[0][0].Suit) <
-		int(math.Min(float64(numCardsOfSuit(hand, prev[0][0].Suit)), float64(len(hand)))) {
-		log.Printf("prev play trump, but played %d trump, and %d available",
+		int(math.Min(float64(numCardsOfSuit(hand, prev[0][0].Suit)), float64(lenPlay(prev)))) {
+		log.Printf("prev play not trump, but played %d of suit, and %d available",
 			numCardsOfSuit(cardList(next), prev[0][0].Suit),
-			int(math.Min(float64(numCardsOfSuit(hand, prev[0][0].Suit)), float64(len(hand)))),
+			int(math.Min(float64(numCardsOfSuit(hand, prev[0][0].Suit)), float64(lenPlay(prev)))),
 		)
 		return false
 	}

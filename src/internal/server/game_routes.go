@@ -111,6 +111,14 @@ func (s *Server) FlipCards(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid flip", http.StatusConflict)
 		return
 	}
+	for _, p := range room.Game.Players {
+		p.ResetCards()
+	}
+	cardsPlayed := make([]models.Card, req.NumCards)
+	for i := 0; i < req.NumCards; i++ {
+		cardsPlayed[i] = req.Card
+	}
+	room.Game.Players[s.Users[userID].Username].PlayCards([][]models.Card{cardsPlayed})
 
 	log.Printf("banker: %s", room.Game.Banker)
 	log.Printf("trump: %d %s", room.Game.TrumpNumber, room.Game.TrumpSuit)

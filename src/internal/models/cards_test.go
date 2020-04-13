@@ -328,6 +328,49 @@ func TestIsValidPlay(t *testing.T) {
 			},
 			expected: false,
 		}, {
+			trumpNumber: 2,
+			trumpSuit:   models.Diamond,
+			prev: [][]models.Card{
+				[]models.Card{
+					{
+						Value: 5,
+						Suit:  models.Diamond,
+					},
+					{
+						Value: 5,
+						Suit:  models.Diamond,
+					},
+				},
+			},
+			next: [][]models.Card{
+				[]models.Card{
+					{
+						Value: 2,
+						Suit:  models.Diamond,
+					},
+				}, []models.Card{
+					{
+						Value: 5,
+						Suit:  models.Diamond,
+					},
+				},
+			},
+			hand: []models.Card{
+				{
+					Value: 2,
+					Suit:  models.Diamond,
+				},
+				{
+					Value: 8,
+					Suit:  models.Diamond,
+				},
+				{
+					Value: 5,
+					Suit:  models.Diamond,
+				},
+			},
+			expected: true,
+		}, {
 			trumpNumber: 3,
 			trumpSuit:   models.Diamond,
 			prev: [][]models.Card{
