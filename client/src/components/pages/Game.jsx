@@ -12,23 +12,28 @@ import "../../utilities.css";
 
 //Props: user, roomid, roomInfo
 
+// left, top, right
 const playerLocations = [
   [10, 45, null],
   [50, 28, null],
-  [null, 45, 10],
+  [null, 45, 10]
 ];
 
 const trumpNumber = 2;
 
-const Game = (props) => {
-  console.log(playerLocations);
-  let game = props.roomInfo.game;
+const Game = props => {
   const [selectedCards, setSelectedCards] = useState([]);
 
   const playCards = () => {
     console.log(`Playing ${JSON.stringify(selectedCards)}`);
     // Disallow leads for now TODO alex make leads possible
-    post("/play_cards", { cards: [selectedCards] });
+    post("/play_cards", { cards: [selectedCards] }).then(res => {
+      if (res.status === 200) {
+        setSelectedCards([]);
+      } else {
+        console.log("cards could not be played..");
+      }
+    });
   };
 
   const startDrawing = () => {
@@ -37,7 +42,10 @@ const Game = (props) => {
 
   const declarable = () => {
     for (const c of selectedCards) {
-      if (c.value !== trumpNumber && c.suit === selectedCards[0].value) {
+      if (
+        (c.value !== trumpNumber && c.suit !== "JOKER") ||
+        c.suit !== selectedCards[0].suit
+      ) {
         return false;
       }
     }
@@ -50,7 +58,13 @@ const Game = (props) => {
     if (declarable()) {
       post("/flip_cards", {
         card: selectedCards[0],
-        numCards: selectedCards.length,
+        numCards: selectedCards.length
+      }).then(res => {
+        if (res.status === 200) {
+          setSelectedCards([]);
+        } else {
+          console.log("could not flip those cards");
+        }
       });
     } else {
       console.log("invalid");
@@ -63,7 +77,7 @@ const Game = (props) => {
   };
 
   const setKitty = () => {
-    post("/set_kitty", { kitty: selectedCards }).then((res) => {
+    post("/set_kitty", { kitty: selectedCards }).then(res => {
       if (res.status === 200) {
         setSelectedCards([]);
       } else {
@@ -72,8 +86,26 @@ const Game = (props) => {
     });
   };
 
-  let players = props.roomInfo.users
-    .filter((p) => p.username !== props.user.username)
+  let playersBefore = [];
+  let playersAfter = [];
+  let reached = false;
+
+  props.roomInfo.users.forEach(u => {
+    if (u.username === props.user.username) {
+      reached = true;
+    } else if (reached) {
+      playersAfter.push(u);
+    } else {
+      playersBefore.push(u);
+    }
+  });
+
+  console.log(playersBefore);
+  console.log(playersAfter);
+
+  let players = playersAfter
+    .concat(playersBefore)
+    .reverse()
     .map((p, i) => (
       <Player
         key={p.username}
@@ -165,7 +197,8 @@ const Game = (props) => {
         <div className="Game-play-button-container">{gameButton}</div>
       ) : null}
       {props.user.username in props.roomInfo.game.players &&
-      props.roomInfo.game.players[props.user.username].cardsPlayed ? (
+      props.roomInfo.game.players[props.user.username].cardsPlayed &&
+      props.roomInfo.game.gamePhase === "PLAYING" ? (
         <div className="Game-played-cards">
           <PlayerCards
             playerInfo={props.roomInfo.game.players[props.user.username]}

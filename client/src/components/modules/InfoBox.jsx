@@ -1,11 +1,13 @@
 import React from "react";
 import "./InfoBox.css";
 
-let InfoBox = (props) => {
-  let points = Object.values(props.roomInfo.game.players).reduce(
-    (t, a) => t + a.points,
-    0
-  );
+let InfoBox = props => {
+  let points = Object.values(props.roomInfo.game.players).reduce((t, a) => {
+    if (a.team !== "BOSSES") {
+      return t + a.points;
+    }
+    return t;
+  }, 0);
 
   return (
     <div className="InfoBox-container">
