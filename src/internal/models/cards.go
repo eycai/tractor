@@ -77,6 +77,18 @@ func GetPoints(hand [][]Card) int {
 	return points
 }
 
+// GetFallback rearranges a list of tricks into a list of cards played individually
+func GetFallback(cards [][]Card) [][]Card {
+	fallback := [][]Card{}
+	for _, t := range cards {
+		for _, c := range t {
+			fallback = append(fallback, []Card{c})
+		}
+	}
+	return fallback
+}
+
+// HasCards returns true if the hand contains all the given cards.
 func HasCards(hand []Card, cards [][]Card) bool {
 	available := make(map[Card]int)
 	for _, c := range hand {

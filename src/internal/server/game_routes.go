@@ -107,6 +107,16 @@ func (s *Server) FlipCards(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	cardsPlayed := make([]models.Card, req.NumCards)
+	for i := 0; i < req.NumCards; i++ {
+		cardsPlayed[i] = req.Card
+	}
+
+	if !models.HasCards(s.Users[userID].Hand, [][]models.Card{cardsPlayed}) {
+		http.Error(w, "user does not have these cards", http.StatusConflict)
+		return
+	}
+
 	if ok := room.Game.FlipCard(req.Card, req.NumCards, s.Users[userID].Username); !ok {
 		http.Error(w, "invalid flip", http.StatusConflict)
 		return
@@ -114,14 +124,7 @@ func (s *Server) FlipCards(w http.ResponseWriter, r *http.Request) {
 	for _, p := range room.Game.Players {
 		p.ResetCards()
 	}
-	cardsPlayed := make([]models.Card, req.NumCards)
-	for i := 0; i < req.NumCards; i++ {
-		cardsPlayed[i] = req.Card
-	}
-	if !models.HasCards(s.Users[userID].Hand, [][]models.Card{cardsPlayed}) {
-		http.Error(w, "user does not have these cards", http.StatusConflict)
-		return
-	}
+
 	room.Game.Players[s.Users[userID].Username].PlayCards([][]models.Card{cardsPlayed})
 
 	log.Printf("banker: %s", room.Game.Banker)

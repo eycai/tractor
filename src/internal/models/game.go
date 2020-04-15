@@ -210,7 +210,11 @@ func (g *Game) PlayCards(user string, cards [][]Card, otherHands [][]Card) (Tric
 
 	trick, err := GetTricks(cards)
 	if err != nil {
-		return PlayingTrick, cards, err
+		cards = GetFallback(cards)
+		trick, err = GetTricks(cards)
+		if err != nil {
+			return PlayingTrick, cards, err
+		}
 	}
 	// set current winner
 	if user == g.firstInTrick || NextTrickWins(g.winningTrick, trick) {
