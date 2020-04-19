@@ -23,6 +23,7 @@ const trumpNumber = 2;
 
 const Game = (props) => {
   const [selectedCards, setSelectedCards] = useState([]);
+  const [errorText, setErrorText] = useState("");
 
   const playCards = () => {
     console.log(`Playing ${JSON.stringify(selectedCards)}`);
@@ -31,8 +32,9 @@ const Game = (props) => {
       console.log(res);
       if (res.status === 200) {
         setSelectedCards([]);
+        setErrorText("");
       } else {
-        console.log("cards could not be played..");
+        setErrorText("cards could not be played");
       }
     });
   };
@@ -63,17 +65,17 @@ const Game = (props) => {
       }).then((res) => {
         if (res.status === 200) {
           setSelectedCards([]);
+          setErrorText("");
         } else {
-          console.log("could not flip those cards");
+          setErrorText("could not flip those cards");
         }
       });
     } else {
-      console.log("invalid");
+      setErrorText("could not flip those cards");
     }
   };
 
   const getKitty = () => {
-    console.log("getting the kitty");
     post("/get_kitty");
   };
 
@@ -81,8 +83,11 @@ const Game = (props) => {
     post("/set_kitty", { kitty: selectedCards }).then((res) => {
       if (res.status === 200) {
         setSelectedCards([]);
+        setErrorText("");
       } else {
-        console.log("error setting kitty");
+        setErrorText(
+          "could not set the kitty.. Do you have the right number of cards?"
+        );
       }
     });
   };
@@ -123,6 +128,12 @@ const Game = (props) => {
         <span className="Game-current-turn">{`${props.roomInfo.game.turn}'s`}</span>
         <span>Turn</span>
       </div>
+    </div>
+  );
+
+  let error = (
+    <div className="Game-error-text-container">
+      <div className="Game-error-text u-center-anchored">{errorText}</div>
     </div>
   );
 
@@ -172,13 +183,12 @@ const Game = (props) => {
       if (props.user.username === props.roomInfo.game.trumpFlipUser) {
         gameButton = (
           <div className="Game-play-button" onClick={setKitty}>
-            SET KITTY
+            SET KITTY {selectedCards.length}/8
           </div>
         );
       }
       break;
   }
-  console.log(props.roomInfo.game.players[props.user.username]);
   return (
     <>
       {players}
@@ -194,9 +204,8 @@ const Game = (props) => {
         <Chat />
       </div>
       {centerText}
-      {true ? (
-        <div className="Game-play-button-container">{gameButton}</div>
-      ) : null}
+      {error}
+      <div className="Game-play-button-container">{gameButton}</div>
       {props.user.username in props.roomInfo.game.players &&
       props.roomInfo.game.players[props.user.username].cardsPlayed &&
       props.roomInfo.game.gamePhase === "PLAYING" ? (

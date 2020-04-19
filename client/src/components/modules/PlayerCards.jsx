@@ -10,14 +10,16 @@ export let offset = cardHeight / 10;
 let PlayerCards = (props) => {
   let cardsPlayed =
     props.playerInfo && props.playerInfo.cardsPlayed
-      ? props.playerInfo.cardsPlayed[0].map((c, i) => (
-          <div
-            style={{ zIndex: i, transform: `translateX(${offset * i}px)` }}
-            className="Card-container"
-          >
-            <Card card={c} />
-          </div>
-        ))
+      ? props.playerInfo.cardsPlayed
+          .reduce((a, e) => a.concat(e))
+          .map((c, i) => (
+            <div
+              style={{ zIndex: i, transform: `translateX(${offset * i}px)` }}
+              className="Card-container"
+            >
+              <Card card={c} />
+            </div>
+          ))
       : null;
 
   return (

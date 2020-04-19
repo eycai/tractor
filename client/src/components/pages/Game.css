@@ -61,3 +61,21 @@
   top: 74%;
   left: 50%;
 }
+
+.Game-error-text-container {
+  position: absolute;
+  top: 55%;
+  left: 50%;
+}
+
+.Game-error-text {
+  font-weight: 500;
+  font-size: 20px;
+  line-height: 30px;
+  text-align: center;
+  letter-spacing: 0.1em;
+  display: flex;
+  color: #ff3434;
+  left: -50%;
+  white-space: nowrap;
+}
