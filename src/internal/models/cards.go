@@ -176,7 +176,9 @@ func ParseTrick(cards []Card) (Trick, error) {
 			return trick, fmt.Errorf("all suits should be the same")
 		}
 		if cards[i] != cards[i+1] {
-			if trick.TractorNumConsecutive != 0 && trick.TractorNumConsecutive != numConsecutive {
+			if numConsecutive == 1 {
+				return trick, fmt.Errorf("tractor incorrect length")
+			} else if trick.TractorNumConsecutive != 0 && trick.TractorNumConsecutive != numConsecutive {
 				return trick, fmt.Errorf("tractor incorrect length")
 			} else if !IsConsecutive(cards[i], cards[i+1]) {
 				if !(cards[0].Value == 1 && cards[len(cards)-1].Value == 2) {
