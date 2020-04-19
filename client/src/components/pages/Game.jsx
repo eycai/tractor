@@ -16,18 +16,19 @@ import "../../utilities.css";
 const playerLocations = [
   [10, 45, null],
   [50, 28, null],
-  [null, 45, 10]
+  [null, 45, 10],
 ];
 
 const trumpNumber = 2;
 
-const Game = props => {
+const Game = (props) => {
   const [selectedCards, setSelectedCards] = useState([]);
 
   const playCards = () => {
     console.log(`Playing ${JSON.stringify(selectedCards)}`);
     // Disallow leads for now TODO alex make leads possible
-    post("/play_cards", { cards: [selectedCards] }).then(res => {
+    post("/play_cards", { cards: [selectedCards] }).then((res) => {
+      console.log(res);
       if (res.status === 200) {
         setSelectedCards([]);
       } else {
@@ -58,8 +59,8 @@ const Game = props => {
     if (declarable()) {
       post("/flip_cards", {
         card: selectedCards[0],
-        numCards: selectedCards.length
-      }).then(res => {
+        numCards: selectedCards.length,
+      }).then((res) => {
         if (res.status === 200) {
           setSelectedCards([]);
         } else {
@@ -77,7 +78,7 @@ const Game = props => {
   };
 
   const setKitty = () => {
-    post("/set_kitty", { kitty: selectedCards }).then(res => {
+    post("/set_kitty", { kitty: selectedCards }).then((res) => {
       if (res.status === 200) {
         setSelectedCards([]);
       } else {
@@ -90,7 +91,7 @@ const Game = props => {
   let playersAfter = [];
   let reached = false;
 
-  props.roomInfo.users.forEach(u => {
+  props.roomInfo.users.forEach((u) => {
     if (u.username === props.user.username) {
       reached = true;
     } else if (reached) {

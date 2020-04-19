@@ -267,6 +267,8 @@ func (s *Server) PlayCards(w http.ResponseWriter, r *http.Request) {
 		nextUserIndex := (indexOf(room.Users, s.Users[userID].Username) + 1) % len(room.Users)
 		room.Game.Turn = room.Users[nextUserIndex].Username
 		s.broadcastUpdate(room.ID, "cards_played")
+		log.Printf("success")
+		returnSuccess(w)
 		return
 	}
 

@@ -4,8 +4,8 @@ async function request(url, params, method = "GET") {
   const options = {
     method,
     headers: {
-      "Content-Type": "application/json"
-    }
+      "Content-Type": "application/json",
+    },
   };
 
   // if params exists and method is GET, add query string to url
@@ -29,11 +29,12 @@ async function request(url, params, method = "GET") {
   }
 
   let result = null;
-
+  console.log(response);
   try {
     result = await response.json();
   } catch (e) {
-    return generateErrorResponse("Couldn't jsonify");
+    console.log(e);
+    return generateErrorResponse(response.status, "Couldn't jsonify");
   }
   return { status: 200, payload: result };
 }
@@ -41,13 +42,13 @@ async function request(url, params, method = "GET") {
 function generateErrorResponse(status, message) {
   return {
     status: status,
-    payload: message
+    payload: message,
   };
 }
 
 function objectToQueryString(obj) {
   return Object.keys(obj)
-    .map(key => key + "=" + obj[key])
+    .map((key) => key + "=" + obj[key])
     .join("&");
 }
 

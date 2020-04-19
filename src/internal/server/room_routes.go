@@ -90,6 +90,7 @@ func (s *Server) Heartbeat(w http.ResponseWriter, r *http.Request) {
 		h.LastHeartbeat = time.Now()
 		h.Disconnected = false
 	}
+	returnSuccess(w)
 }
 
 func (s *Server) JoinRoom(w http.ResponseWriter, r *http.Request) {
