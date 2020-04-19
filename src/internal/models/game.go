@@ -161,8 +161,13 @@ func (g *Game) IsValidPlayForGame(cards [][]Card, hand []Card) bool {
 	log.Printf("first play: %v", firstPlay)
 	tricks, err := GetTricks(cards)
 	if err != nil {
-		log.Printf("can't parse play")
-		return false
+		cards = GetFallback(cards)
+		tricks, err = GetTricks(cards)
+		if err != nil {
+			log.Printf("can't parse play")
+			return false
+		}
+
 	}
 
 	// is the first play
