@@ -281,9 +281,8 @@ func (s *Server) PlayCards(w http.ResponseWriter, r *http.Request) {
 			TotalPoints: peasantPoints + kittyPoints,
 		}
 		s.broadcastEvent(room.ID, "round_ended", event)
-	} else {
-		s.broadcastUpdate(room.ID, "trick_ended")
 	}
+	s.broadcastUpdate(room.ID, "trick_ended")
 	log.Printf("success")
 	returnSuccess(w)
 }
