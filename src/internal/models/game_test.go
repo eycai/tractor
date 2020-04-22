@@ -1300,6 +1300,10 @@ func TestPlayCards(t *testing.T) {
 				}
 			}
 			status, played, err := tc.game.PlayCards(play.user, play.play, otherHands)
+			if status == models.TrickEnded {
+				tc.game.EndTrick()
+			}
+
 			if err != nil {
 				t.Errorf("expected no error, but got error")
 			}

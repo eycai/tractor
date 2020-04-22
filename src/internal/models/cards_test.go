@@ -329,6 +329,37 @@ func TestIsValidPlay(t *testing.T) {
 			expected: false,
 		}, {
 			trumpNumber: 2,
+			trumpSuit:   models.Spade,
+			prev: [][]models.Card{
+				[]models.Card{
+					{
+						Value: 5,
+						Suit:  models.Diamond,
+					},
+				},
+			},
+			next: [][]models.Card{
+				[]models.Card{
+					{
+						Value: 3,
+						Suit:  models.Club,
+					},
+				},
+			},
+			hand: []models.Card{
+				{
+					Value: 2,
+					Suit:  models.Diamond,
+				},
+				{
+					Value: 3,
+					Suit:  models.Club,
+				},
+			},
+			expected: true,
+		},
+		{
+			trumpNumber: 2,
 			trumpSuit:   models.Diamond,
 			prev: [][]models.Card{
 				[]models.Card{
@@ -849,6 +880,31 @@ func TestParse(t *testing.T) {
 				IsTrump:  false,
 			},
 			err:         nil,
+			trumpSuit:   models.Diamond,
+			trumpNumber: 2,
+		}, {
+			input: []models.Card{
+				{
+					Value: 5,
+					Suit:  models.Spade,
+				},
+				{
+					Value: 4,
+					Suit:  models.Spade,
+				},
+			},
+			expected: models.Trick{
+				Pattern: models.Tractor,
+				LargestCard: models.Card{
+					Value: 5,
+					Suit:  models.Spade,
+				},
+				NumCards:              2,
+				TractorNumConsecutive: 1,
+				Suit:                  models.Spade,
+				IsTrump:               false,
+			},
+			err:         fmt.Errorf("tractor incorrect length"),
 			trumpSuit:   models.Diamond,
 			trumpNumber: 2,
 		}, {

@@ -176,9 +176,7 @@ func ParseTrick(cards []Card) (Trick, error) {
 			return trick, fmt.Errorf("all suits should be the same")
 		}
 		if cards[i] != cards[i+1] {
-			if numConsecutive == 1 {
-				return trick, fmt.Errorf("tractor incorrect length")
-			} else if trick.TractorNumConsecutive != 0 && trick.TractorNumConsecutive != numConsecutive {
+			if trick.TractorNumConsecutive != 0 && trick.TractorNumConsecutive != numConsecutive {
 				return trick, fmt.Errorf("tractor incorrect length")
 			} else if !IsConsecutive(cards[i], cards[i+1]) {
 				if !(cards[0].Value == 1 && cards[len(cards)-1].Value == 2) {
@@ -194,6 +192,9 @@ func ParseTrick(cards []Card) (Trick, error) {
 		}
 	}
 	if trick.TractorNumConsecutive != 0 && numConsecutive != trick.TractorNumConsecutive {
+		return trick, fmt.Errorf("tractor incorrect length")
+	}
+	if trick.TractorNumConsecutive == 1 {
 		return trick, fmt.Errorf("tractor incorrect length")
 	}
 	return trick, nil
@@ -340,7 +341,7 @@ func trickSuitsMatch(t []Trick) bool {
 func numCardsOfSuit(hand []Card, suit Suit) int {
 	n := 0
 	for _, c := range hand {
-		if c.Suit == suit {
+		if c.Suit == suit && !c.IsTrump() {
 			n++
 		}
 	}

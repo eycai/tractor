@@ -157,6 +157,7 @@ func (g *Game) IsValidPlayForGame(cards [][]Card, hand []Card) bool {
 		return false
 	}
 	cards = g.GetUpdatedPlays(cards)
+	hand = g.GetUpdatedCards(hand)
 	firstPlay := g.GetUpdatedPlays(g.Players[g.firstInTrick].CardsPlayed)
 	log.Printf("first play: %v", firstPlay)
 	tricks, err := GetTricks(cards)
@@ -200,27 +201,41 @@ func (g *Game) PlayCards(user string, cards [][]Card, otherHands [][]Card) (Tric
 	}
 	cards = g.GetUpdatedPlays(cards)
 
+	trick, err := GetTricks(cards)
+	if err != nil {
+		cards = GetFallback(cards)
+		print("FALLING BACK %v", cards)
+		trick, err = GetTricks(cards)
+		if err != nil {
+			print("ERROR PARSING %v", cards)
+			return PlayingTrick, cards, err
+		}
+	}
+
 	if user == g.firstInTrick && len(cards) > 1 {
 		// check if invalid lead, and force to play the smallest trick.
 		for _, h := range otherHands {
+			h = g.GetUpdatedCards(h)
 			invalid, smallest, err := BeatsLead(cards, h)
 			if err != nil {
 				return PlayingTrick, cards, err
 			}
 			if invalid {
 				cards = smallest
+				trick, err = GetTricks(cards)
+				if err != nil {
+					cards = GetFallback(cards)
+					print("FALLING BACK %v", cards)
+					trick, err = GetTricks(cards)
+					if err != nil {
+						print("ERROR PARSING %v", cards)
+						return PlayingTrick, cards, err
+					}
+				}
 			}
 		}
 	}
 
-	trick, err := GetTricks(cards)
-	if err != nil {
-		cards = GetFallback(cards)
-		trick, err = GetTricks(cards)
-		if err != nil {
-			return PlayingTrick, cards, err
-		}
-	}
 	// set current winner
 	if user == g.firstInTrick || NextTrickWins(g.winningTrick, trick) {
 		g.SetWinningTrick(user, trick)
@@ -231,29 +246,17 @@ func (g *Game) PlayCards(user string, cards [][]Card, otherHands [][]Card) (Tric
 		g.setNextTurn()
 		return PlayingTrick, cards, nil
 	}
-	g.endTrick()
 	return TrickEnded, cards, nil
 }
 
 // EndState returns the ending state of the game.
-func (g *Game) EndState() (int, int, []Card) {
-	peasantPoints := 0
-	for _, p := range g.Players {
-		if p.Team == Peasants {
-			peasantPoints += p.Points
-		}
+func (g *Game) EndState() (int, int, Team) {
+	levels, points, kittyPoints := g.peasantResults()
+	team := Peasants
+	if levels < 0 {
+		team = Bosses
 	}
-
-	kittyPoints := 0
-	if g.Players[g.currentWinner].Team == Peasants {
-		mult := 0
-		for _, t := range g.winningTrick {
-			mult += int(math.Exp2(float64(t.NumCards)))
-		}
-		kittyPoints = GetPoints([][]Card{g.kitty}) * mult
-	}
-
-	return peasantPoints, kittyPoints, g.kitty
+	return points, kittyPoints, team
 }
 
 // SetWinningTrick sets the user and trick that is currently winning
@@ -265,7 +268,7 @@ func (g *Game) SetWinningTrick(user string, trick []Trick) {
 // EndRound ends the round and resets the game for the next round.
 func (g *Game) EndRound() {
 	g.round++
-	peasantLevels := g.peasantLevels()
+	peasantLevels, _, _ := g.peasantResults()
 	winningTeam := Bosses
 	if peasantLevels >= 0 {
 		winningTeam = Peasants
@@ -283,6 +286,7 @@ func (g *Game) EndRound() {
 				p.setLevel(0 - peasantLevels)
 			}
 		}
+		p.ResetCards()
 	}
 
 	// switch teams
@@ -432,7 +436,7 @@ func (g *Game) distributePoints() {
 	}
 }
 
-func (g *Game) endTrick() {
+func (g *Game) EndTrick() {
 	g.distributePoints()
 	g.Turn = g.currentWinner
 	g.firstInTrick = g.currentWinner
@@ -447,13 +451,29 @@ func (g *Game) trickEnded() bool {
 	return true
 }
 
-func (g *Game) peasantLevels() int {
-	peasantPoints, kittyPoints, _ := g.EndState()
-	peasantPoints += kittyPoints
+// level, peasant points, kitty points
+func (g *Game) peasantResults() (int, int, int) {
+	peasantPoints := 0
+	for _, p := range g.Players {
+		if p.Team == Peasants {
+			peasantPoints += p.Points
+		}
+	}
+
+	kittyPoints := 0
+	if g.Players[g.currentWinner].Team == Peasants {
+		mult := 0
+		for _, t := range g.winningTrick {
+			mult += int(math.Exp2(float64(t.NumCards)))
+		}
+		kittyPoints = GetPoints([][]Card{g.kitty}) * mult
+	}
+
+	totalPoints := peasantPoints + kittyPoints
 	numDecks := len(g.Players) / 2
 	pointsPerLevel := numDecks * 20
-	if peasantPoints == 0 {
-		return -3
+	if totalPoints == 0 {
+		return -3, peasantPoints, kittyPoints
 	}
-	return (peasantPoints / pointsPerLevel) - 2
+	return (totalPoints / pointsPerLevel) - 2, peasantPoints, kittyPoints
 }

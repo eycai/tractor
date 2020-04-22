@@ -272,17 +272,24 @@ func (s *Server) PlayCards(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	s.broadcastUpdate(room.ID, "trick_ended")
+	time.Sleep(time.Second * 2)
+	room.Game.EndTrick()
+	s.broadcastUpdate(room.ID, "trick_ended")
+
 	if len(s.Users[userID].Hand) == 0 {
 		// round ended
-		peasantPoints, kittyPoints, kitty := room.Game.EndState()
+		room.Game.Players[room.Game.Banker].PlayCards([][]models.Card{
+			s.Users[s.UserIDs[room.Game.Banker]].Kitty,
+		})
+		s.broadcastUpdate(room.ID, "round_ended")
+		_, kittyPoints, team := room.Game.EndState()
 		event := models.EndRoundEvent{
-			Kitty:       kitty,
+			Winners:     team,
 			KittyPoints: kittyPoints,
-			TotalPoints: peasantPoints + kittyPoints,
 		}
 		s.broadcastEvent(room.ID, "round_ended", event)
 	}
-	s.broadcastUpdate(room.ID, "trick_ended")
 	log.Printf("success")
 	returnSuccess(w)
 }
